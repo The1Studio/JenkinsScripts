@@ -1,0 +1,625 @@
+pipeline
+{
+    agent { label "windows" }
+
+    // Notes:
+    // An empty string "" or null is falsy, all other string values are truthy.
+    // Use "${variable}" to interpolate strings.
+    // "Double quotes" strings get interpolated, 'single quotes' do not.
+    // If it is not set then formatting it will result in "null", ie "${env.NOT_SET}" === "null", this is why you will
+    // see tests for truthy/falsy to disambiguate this case.
+    //
+    // When setting a parameter in the environment block, null will get converted to "null", but "" will get converted
+    // to null. It seems to do a string conversion before setting the variable, then if the converted value is falsy
+    // sets it to null.
+    //
+    // External environment variables:
+    // To allow custom builds, this script checks for the following environment variables to use as overrides:
+    //
+    // PARAM_UNITY_TOOL_NAME - Version of Unity to use. Specify year and major version. eg "Unity3D Editor 2021.1.17f1"
+    // PARAM_BUILD_ANDROID - Should build android client. eg "true" or "false"
+    // PARAM_BUILD_IOS - Should build ios client. eg "true" or "false"
+    //
+    // other external values, set by jenkins:
+
+    environment
+    {
+        ANDROID_PLATFORM = "android";
+        WEBGL_PLATFORM = "webgl";
+        IOS_PLATFORM = "ios";
+    
+        BUILDING_PULL_REQUEST = BuildingPullRequest()
+        DESTINATION_BRANCH = DestinationBranch()
+        NOTIFY_GITHUB = ShouldNotifyGithub()
+        NOTIFY_CHAT_CHANNEL = ShouldNotifyToChatChannel()
+        RUN_UNIT_TESTS = "true"
+        UPLOAD_BUILD = ShouldUploadBuild()
+        SCRIPTING_BACKEND = ScriptingBackend()
+        GIT_LOCAL_BRANCH = StripPrefix(env.GIT_BRANCH, "origin/")
+        BUILD_ANDROID = CheckParam(env.PARAM_BUILD_ANDROID, ShouldBuildPlatform("android"))
+        BUILD_IOS = CheckParam(env.PARAM_BUILD_IOS, ShouldBuildPlatform("ios"))
+        BUILD_WEBGL = CheckParam(env.PARAM_BUILD_WEBGL, ShouldBuildPlatform("webgl"))
+        UNITY_TOOL_NAME = CheckParam(env.PARAM_UNITY_TOOL_NAME, "Unity3D 2021.3.14f1")
+        BUILD_VERSION = GetGameVersion(CheckParam(env.BUILD_VERSION, "0.0.1"))
+        SHOULD_BUILD_DEVELOPMENT = CheckTrueFalse(env.PARAM_SHOULD_BUILD_DEVELOPMENT)
+        SHOULD_BUILD_APP_BUNDLE = CheckTrueFalse(env.PARAM_SHOULD_BUILD_APP_BUNDLE)
+        SHOULD_OPTIMIZE_BUILD_SIZE = CheckTrueFalse(env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE)
+        SHOULD_DEFAULT_ANDROID_KEY_STORE = CheckTrueFalse(env.PARAM_SHOULD_DEFAULT_ANDROID_KEY_STORE)
+        UNITY_SCRIPTING_DEFINE_SYMBOLS = CheckParam(env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS, "TextMeshPro;ODIN_INSPECTOR;ODIN_INSPECTOR_3;EASY_MOBILE;EASY_MOBILE_PRO;EM_ADMOB;EM_URP;ADDRESSABLES_ENABLED")
+        BUILD_FILE_NAME = CheckParam(env.PARAM_BUILD_FILE_NAME, "BattleRush")
+        BUILD_DOWNLOAD_URL = CheckParam(env.PARAM_BUILD_DOWNLOAD_URL, "https://the1studio-builds.s3.ap-southeast-1.amazonaws.com")
+        CHAT_NOTIFY_DESCRIPTION_FILE = "chat_notify_description.txt"
+        DISCORD_WEBHOOK_URL = CheckParam(env.PARAM_DISCORD_WEBHOOK_URL, "https://discord.com/api/webhooks/1048201767629897829/cA68S40j0uso30EP1hDUuP9t2o4NgY8CwxbAK4WVg4iB1P6oUmpkCciqqYDGju0pSvJY")
+        GIT_URL_PR = CheckParam(env.PARAM_GIT_URL_PR, "TheOneStudio/")
+        BUILD_LOCATION = ".\\Build\\Client\\"
+        PACKAGE_NAME = CheckParam(env.PARAM_PACKAGE_NAME, "")
+        KEYSTORE_FILE_NAME = "the1_googleplay.keystore"
+        PUBLISHER_NAME = CheckParam(env.PARAM_PUBLISHER_NAME, "")
+        KEYSTORE_PASSWORD = CheckParam(env.PARAM_KEYSTORE_PASSWORD, "tothemoon")
+        KEYSTORE_ALIAS_NAME = CheckParam(env.PARAM_KEYSTORE_ALIAS_NAME, "theonestudio")
+        KEYSTORE_ALIAS_PASSWORD = CheckParam(env.PARAM_KEYSTORE_ALIAS_PASSWORD, "tothemoon")
+        
+        UNITY_ID_EMAIL = credentials('jenkins-id-for-unity-email')
+        UNITY_ID_PASSWORD = credentials('jenkins-id-for-unity-password')
+        UNITY_ID_LICENSE = credentials('jenkins-id-for-unity-license')
+    }
+
+    stages
+    {
+        stage("Clean and sync")
+        {
+            options { timeout(time: 1, unit: 'HOURS') }
+
+            steps
+            {
+                script
+                {
+                    // log our environment vars
+                    echo "==== param ===="
+                    echo "PARAM_UNITY_TOOL_NAME = ${env.PARAM_UNITY_TOOL_NAME} ${env.PARAM_UNITY_TOOL_NAME ? "truthy" : "falsy"}"
+                    echo " "
+                    echo "==== env ===="
+                    echo "BUILDING_PULL_REQUEST = ${env.BUILDING_PULL_REQUEST} ${env.BUILDING_PULL_REQUEST ? "truthy" : "falsy"}"
+                    echo "DESTINATION_BRANCH = ${env.DESTINATION_BRANCH} ${env.DESTINATION_BRANCH ? "truthy" : "falsy"}"
+                    echo "NOTIFY_GITHUB = ${env.NOTIFY_GITHUB} ${env.NOTIFY_GITHUB ? "truthy" : "falsy"}"
+                    echo "NOTIFY_CHAT_CHANNEL = ${env.NOTIFY_CHAT_CHANNEL} ${env.NOTIFY_CHAT_CHANNEL ? "truthy" : "falsy"}"
+                    echo "RUN_UNIT_TESTS = ${env.RUN_UNIT_TESTS} ${env.RUN_UNIT_TESTS ? "truthy" : "falsy"}"
+                    echo "UPLOAD_BUILD = ${env.UPLOAD_BUILD} ${env.UPLOAD_BUILD ? "truthy" : "falsy"}"
+                    echo "BOT_NAME = ${env.BOT_NAME}"
+                    echo "SCRIPTING_BACKEND = ${env.SCRIPTING_BACKEND}"
+                    echo "GIT_LOCAL_BRANCH = ${env.GIT_LOCAL_BRANCH} ${env.GIT_LOCAL_BRANCH ? "truthy" : "falsy"}"
+                    echo "UNITY_TOOL_NAME = ${env.UNITY_TOOL_NAME} ${env.UNITY_TOOL_NAME ? "truthy" : "falsy"}"
+
+                    echo "SHOULD_BUILD_DEVELOPMENT = ${env.SHOULD_BUILD_DEVELOPMENT} ${env.SHOULD_BUILD_DEVELOPMENT ? "truthy" : "falsy"}"
+                    echo "SHOULD_BUILD_APP_BUNDLE = ${env.SHOULD_BUILD_APP_BUNDLE} ${env.SHOULD_BUILD_APP_BUNDLE ? "truthy" : "falsy"}"
+                    echo "SHOULD_OPTIMIZE_BUILD_SIZE = ${env.SHOULD_OPTIMIZE_BUILD_SIZE} ${env.SHOULD_OPTIMIZE_BUILD_SIZE ? "truthy" : "falsy"}"
+                    echo "SHOULD_DEFAULT_ANDROID_KEY_STORE = ${env.SHOULD_DEFAULT_ANDROID_KEY_STORE} ${env.SHOULD_DEFAULT_ANDROID_KEY_STORE ? "truthy" : "falsy"}"
+                    echo "UNITY_SCRIPTING_DEFINE_SYMBOLS = ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS} ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS ? "truthy" : "falsy"}"
+                    echo " "
+
+                    // log built in environment vars
+                    echo "==== built-in ===="
+                    echo "GIT_BRANCH = ${env.GIT_BRANCH}"
+                    echo "ghprbTargetBranch = ${env.ghprbTargetBranch}"
+                    echo "ghprbSourceBranch = ${env.ghprbSourceBranch}"
+                    echo "BUILD_NUMBER = ${env.BUILD_NUMBER}"
+                    echo "GIT_COMMIT = ${env.GIT_COMMIT}"
+                    echo " "
+                    
+                    echo "---- Start cleaning ----"
+                    powershell script:"git clean -fd"
+                    powershell script:"git reset --hard"
+                    powershell script:"git submodule foreach --recursive git reset --hard"
+                    powershell script:"Remove-Item -Recurse -Force .\\Build\\"
+                    powershell script:"Remove-Item -Recurse -Force .\\Unity$BUILD_FILE_NAME\\Library\\Bee\\"
+                    echo "---- End cleaning   ----"
+                    
+                    echo "---- Update submodule ----"
+                    powershell script:"git submodule update --init"
+                    powershell script:"git submodule update"
+                    echo "---- End Update submodule   ----"
+                    
+                    // set build version and other info
+                    powershell script: "Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${BUILD_FILE_NAME}"
+                    //Build message is failed by default, then we will change it to success if build success
+                    bat "echo __version: ${env.BUILD_VERSION} - number: ${env.BUILD_NUMBER}__ was built failed!!! > ${CHAT_NOTIFY_DESCRIPTION_FILE}"
+                }
+            }
+
+            post
+            {
+                failure
+                {
+                    script
+                    {
+                        if (env.NOTIFY_GITHUB)
+                        {
+                            bat "echo Build failed while cleaning assets repo > message.txt"
+                            PostStatusGithub("message.txt")
+                        }                    
+                    }
+                }
+            }
+        }
+
+        stage("Build Client (android)")
+        {
+            when { environment name: 'BUILD_ANDROID', value: 'true' }
+            options { timeout(time: 2, unit: 'HOURS') }
+
+            environment
+            {
+                unityEditorPath = tool name: env.UNITY_TOOL_NAME
+                CLIENT_PLATFORM = "android"
+            }
+
+            steps
+            {
+                script
+                {
+                    def output = GetOutput("android")
+                    BuildClient(output)
+                    if (env.SHOULD_BUILD_APP_BUNDLE)
+                    {
+                        ExportApkFromAAB(output)
+                    }
+                }
+            }
+
+            // special case for PR tests
+            post
+            {
+                failure
+                {
+                    script
+                    {
+                        NotifyClientBuildResultToGithub()       
+                    }
+                }
+            }
+        }
+        
+        stage("Build Client (WebGL)")
+        {
+            when { environment name: 'BUILD_WEBGL', value: 'true' }
+            options { timeout(time: 2, unit: 'HOURS') }
+
+            environment
+            {
+                unityEditorPath = tool name: env.UNITY_TOOL_NAME
+                CLIENT_PLATFORM = "webgl"
+            }
+
+            steps
+            {
+                script
+                {
+                    BuildClient(GetOutput("webgl"))
+                }
+            }
+
+            // special case for PR tests
+            post
+            {
+                failure
+                {
+                    script
+                    {
+                        NotifyClientBuildResultToGithub()       
+                    }
+                }
+            }
+        }
+        
+        stage("Upload Build")
+        {
+            when { environment name: 'UPLOAD_BUILD', value: 'true' }
+            options { timeout(time: 75, unit: 'MINUTES') }
+
+            steps
+            {
+                script
+                {
+                    bat "echo __version: ${env.BUILD_VERSION} - number: ${env.BUILD_NUMBER}__ was built successfully !!! > ${CHAT_NOTIFY_DESCRIPTION_FILE}"
+                    downloadPath = "jobs/${JOB_NAME}/${env.BUILD_NUMBER}/Build/Client"
+                    
+                    for (platform in GetPlatformList()) 
+                    {
+                        output = GetOutput(platform);
+                        artifact = "Client/$platform/$output";
+                        downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
+                        buildSize = GetBuildSize(artifact)
+                        UploadToS3(artifact, "$downloadPath/$platform/$output")
+                        
+                        bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
+                        if (platform == "android" && env.SHOULD_BUILD_APP_BUNDLE)
+                        {
+                            output = output.replace("aab", "apk")
+                            artifact = artifact.replace("aab", "apk")
+                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
+                            buildSize = GetBuildSize(artifact)
+                            UploadToS3(artifact, "$downloadPath/$platform/$output")
+                            
+                            bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
+                            bat "echo __packageName: ${env.PACKAGE_NAME}__ >> $CHAT_NOTIFY_DESCRIPTION_FILE"
+                        }
+                    }
+                }
+            }
+        }                
+    }
+    
+    post
+    {
+        success
+        {
+            script
+            {
+                if (env.NOTIFY_GITHUB)
+                {
+                    PostStatusGithub("success.txt")
+                }
+            }
+        }
+
+        aborted
+        {
+            script
+            {
+                if (env.NOTIFY_GITHUB)
+                {
+                    bat "echo Build aborted, either by a user, from a step timeout, or a newer commit to this PR > message.txt"
+                    bat "echo Please check the console log to verify the cause >> message.txt"
+                    PostStatusGithub("message.txt")
+                }
+            }
+        }
+        
+        always
+        {
+            script
+            {
+                if (env.NOTIFY_CHAT_CHANNEL)
+                {
+                    if (env.DISCORD_WEBHOOK_URL)
+                    {
+                        discordSend description: GetFileContent(env.CHAT_NOTIFY_DESCRIPTION_FILE), enableArtifactsList: true, footer: "------TheOneStudio-------", link: env.BUILD_URL, result: currentBuild.currentResult, showChangeset: true, thumbnail: 'https://user-images.githubusercontent.com/9598614/205434501-dc9d4c7a-caad-48de-8ec2-ca586f320f87.png', title: "$JOB_NAME - $BUILD_NUMBER", webhookURL: DISCORD_WEBHOOK_URL
+                    }
+                 
+                    if (env.SLACK_CHANNEL)
+                    {
+                        slackSend  channel: env.SLACK_CHANNEL, teamDomain: env.SLACK_DOMAIN, color: 'good', message: GetFileContent(env.CHAT_NOTIFY_DESCRIPTION_FILE), tokenCredentialId: 'chibi-clash-income-webhook'
+                    }
+                }
+            }
+        }
+    }
+}
+
+def Powershellx(command)
+{
+    // built-in powershell command can break error reporting with it's wrapping
+    command = command.replace("\"", "\\\"");
+    bat "powershell -ExecutionPolicy Bypass -NoLogo -NonInteractive -Command ${command}"
+}
+
+String BuildingPullRequest()
+{
+    return env.ghprbTargetBranch ? "true" : ""
+}
+
+String DestinationBranch(override = "")
+{
+    return override ?: env.ghprbTargetBranch ?: env.GIT_BRANCH
+}
+
+String SourceBranch()
+{
+    return env.ghprbSourceBranch ?: env.GIT_BRANCH
+}
+
+String ShouldNotifyGithub()
+{
+    // if we are a PR, then it goes to github, otherwise post to zulip.
+    return env.ghprbTargetBranch != null ? "true" : "";
+}
+
+String ShouldNotifyToChatChannel()
+{
+    // if we are a PR, then it goes to github, otherwise post to zulip.
+    return env.ghprbTargetBranch == null ? "true" : "";
+}
+
+String ShouldUploadBuild()
+{
+    // if we aren't a PR, then upload
+    return env.ghprbTargetBranch == null ? "true" : "";
+}
+
+String ScriptingBackend()
+{
+    // PRs use mono for quick compile time
+    return env.ghprbTargetBranch ? "mono" : "il2cpp"
+}
+
+String GetChatChannelName()
+{
+    switch (env.GIT_BRANCH)
+    {
+        case "origin/release":     return "release";
+        case "origin/develop":     return "develop";
+        case "origin/staging":       return "staging";
+        case "origin/playtest":    return "playtest";
+        default:                   return "build";
+    }
+}
+
+String GetGameVersion(version)
+{
+    switch (env.GIT_BRANCH)
+    {
+        case "origin/release":     return env.BUILD_VERSION;
+        case "origin/develop":     return "${version}-develop-${env.BUILD_NUMBER}";
+        case "origin/staging":       return "${version}-staging-${env.BUILD_NUMBER}";
+        default:                   return "${version}-${StripPrefix(env.GIT_BRANCH, "origin/")}-${env.BUILD_NUMBER}";
+    }
+}
+
+String CheckParam(param, noparam)
+{
+    return param ?: noparam;
+}
+
+String ShouldBuildPlatform(String platform)
+{
+    def map = [
+        "origin/release":      ["android": true,  "ios": false, "webgl": false],
+        "origin/develop":      ["android": true,  "ios": false, "webgl": false],
+        "origin/staging":      ["android": true,  "ios": false, "webgl": false],
+        // PRs
+        "pr":                  ["android": true,  "ios": false, "webgl": false],
+        // Custom
+        "custom":              ["android": true,  "ios": false, "webgl": false],
+        // unknown branches
+        "<unknown>":           ["android": true,  "ios": false, "webgl": false],
+    ];
+
+    def branch = env.GIT_BRANCH;
+    if (env.ghprbTargetBranch != null)
+    {
+        branch = "pr";
+    }
+  
+    def branchSettings = map[branch];
+
+    if (branchSettings == null)
+    {
+        println "Unknown branch ${branch} when determining platforms to build, building everything."
+        branchSettings = map["<unknown>"];
+    }
+
+    return branchSettings[platform] ? "true" : "";
+}
+
+String StripPrefix(str, prefix)
+{
+    // Would prefer case insensitive, but not available in this version of groovy.
+    if (str.startsWith(prefix))
+    {
+        str = str.substring(prefix.length());
+    }
+
+    return str;
+}
+
+String GetPlatformList()
+{
+    def list = []
+
+    if ("${env.BUILD_ANDROID}" == 'true') { list.add("android"); }
+    if ("${env.BUILD_IOS}" == 'true') { list.add("ios"); }
+    if ("${env.BUILD_WEBGL}" == 'true') { list.add("webgl"); }
+
+
+    return list;
+}
+
+String GetOutput(platform)
+{
+    switch (platform)
+    {
+        case "android": return env.SHOULD_BUILD_APP_BUNDLE ? "${env.BUILD_FILE_NAME}_${env.BUILD_VERSION}.aab" : "${env.BUILD_FILE_NAME}_${env.BUILD_VERSION}.apk";
+        case "ios":     return "${env.BUILD_FILE_NAME}_${env.BUILD_VERSION}.ipa";
+        case "webgl":   return "${env.BUILD_FILE_NAME}";
+        default:        return "default";
+    }
+}
+
+String GetDownloadURL(platform, output)
+{
+    switch (platform)
+    {
+        case "webgl":   return "${output}/index.html";
+        default:        return output;
+    }
+}
+
+String CheckTrueFalse(value)
+{
+    if (!value || value == "false") return "";
+    return "true";
+}
+
+String ShouldBuildDevelopment() {
+    if (CLIENT_PLATFORM == "webgl") return "";
+    return env.SHOULD_BUILD_DEVELOPMENT;
+}
+
+void BuildClient(executableFile)
+{
+    try
+    {
+        def buildCommand = "cd /D \"$unityEditorPath\" && Unity.exe -platforms ${CLIENT_PLATFORM} -scriptingBackend ${SCRIPTING_BACKEND} -quit -batchmode -projectPath \"${workspace}\\Unity$BUILD_FILE_NAME\" -executeMethod \"Build.BuildFromCommandLine\" -logFile \"${workspace}\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" -outputPath ${executableFile} -scriptingDefineSymbols ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS}"
+        
+        getLicenseCommand = "cd /D \"$unityEditorPath\" && Unity.exe -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit";
+        
+        returnLicenseCommand = "cd /D \"$unityEditorPath\" && Unity.exe -quit -batchmode -returnlicense -username '%UNITY_ID_EMAIL%' -password '%UNITY_ID_PASSWORD%'"
+                
+        if (ShouldBuildDevelopment()) 
+        {
+            buildCommand = "$buildCommand -development"
+        } 
+        if (env.SHOULD_BUILD_APP_BUNDLE)
+        {
+            //GET LICENSE
+            bat getLicenseCommand
+            buildCommand = "$buildCommand -buildAppBundle"
+        }
+        if (env.SHOULD_OPTIMIZE_BUILD_SIZE)
+        {
+            buildCommand = "$buildCommand -optimizeSize"
+        }
+        if (env.SHOULD_DEFAULT_ANDROID_KEY_STORE)
+        {
+            buildCommand = "$buildCommand -theOneAndroidKeyStore"
+        }
+        if (env.PACKAGE_NAME)
+        {
+            buildCommand = "$buildCommand -packageName ${env.PACKAGE_NAME}"
+        }
+        if (env.PUBLISHER_NAME)
+        {
+            buildCommand = "$buildCommand -keyStoreFileName ${GetKeyStoreFileName()}"
+        }
+        if (env.KEYSTORE_PASSWORD)
+        {
+            buildCommand = "$buildCommand -keyStorePassword ${env.KEYSTORE_PASSWORD}"
+        }
+        if (env.KEYSTORE_ALIAS_NAME)
+        {
+            buildCommand = "$buildCommand -keyStoreAliasName ${env.KEYSTORE_ALIAS_NAME}"
+        }
+        if (env.KEYSTORE_ALIAS_PASSWORD)
+        {
+            buildCommand = "$buildCommand -keyStoreAliasPassword ${env.KEYSTORE_ALIAS_PASSWORD}"
+        }
+        
+        //DO BUILD
+        bat buildCommand
+                
+//         if (env.NODE_NAME != "tuha-personal-pc")
+//         {
+//             //RETURN LICENSE
+//             bat returnLicenseCommand
+//         }
+        
+        if (!fileExists("${workspace}\\Build\\Client\\${CLIENT_PLATFORM}\\${executableFile}"))
+        {
+            error("No executable found after build")
+        }
+    }
+    catch (Exception e)
+    {
+        throw e
+    }
+    finally
+    {
+        archiveArtifacts artifacts: "Build/Logs/Build-Client.${CLIENT_PLATFORM}.log", allowEmptyArchive: true
+        archiveArtifacts artifacts: "Build/Logs/Build-Client-Report.${CLIENT_PLATFORM}.log", allowEmptyArchive: true
+    }
+}
+
+void NotifyClientBuildResultToGithub()
+{
+    if (env.NOTIFY_GITHUB)
+    {
+        bat "echo Failed to build client > message.txt"
+        bat "-----Client-Report log---- >> message.txt"
+        Powershellx "Scripts\\Util_AnalyseUnityLog.ps1 -LogFile \".\\Build\\Logs\\Build-Client-Report.${CLIENT_PLATFORM}.log\" >> message.txt"
+        bat "-----Client log---- >> message.txt"
+        Powershellx "Scripts\\Util_AnalyseUnityLog.ps1 -LogFile \".\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" >> message.txt"
+        PostStatusGithub("message.txt")
+    }
+}
+
+void PostStatusGithub(LogFile)
+{
+    commit = env.ghprbActualCommit ?: env.GIT_COMMIT
+    bat "echo. >> ${LogFile}"
+    bat "echo Jenkins build for '${JOB_NAME}' Build: ${BUILD_ID} Commit: ${commit} >> ${LogFile}"
+
+    // Need to escape % for bat
+    url = env.BUILD_URL.replace("%","%%")
+    bat "echo To view console log: ${url}consoleFull >> ${LogFile}"
+    withCredentials([string(credentialsId: 'GitHub-PersonalAccessToken', variable: 'TOKEN')]) {
+        bat "powershell -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile .\\Scripts\\UpdatePRBuildStatus.ps1 -Logfile '${LogFile}' -PullRequestId ${env.ghprbPullId} -Token ${TOKEN} -GitUrlPR ${GIT_URL_PR}"
+    }
+}
+
+void UploadToS3(artifact, path)
+{
+    withAWS(region:'ap-southeast-1', credentials:'the1-s3-credential') {
+        s3Upload(file: "Build/${artifact}", bucket: 'the1studio-builds', path: path)
+    }
+}
+
+long GetBuildSize(artifact)
+{
+    if (artifact.contains(".")) {
+        size = fileSize("Build/${artifact}")
+    } else {
+        size = directorySize("Build/${artifact}")
+    }
+    return (size / (1024 * 1024)).setScale(1, 0)
+}
+
+String GetFileContent(String filePath) {
+    string content = readFile filePath
+    return content
+}
+
+public def fileSize(artifact) {
+    long bytes = 0
+    def files=findFiles(glob: "${artifact}")
+    for (file in files) {
+        if (!file.isDirectory()){
+            bytes += file.length
+        }
+    }
+    return bytes
+}
+
+public def directorySize(directory) {
+    long bytes = 0
+    directory = (directory?:'').replace('\\','/')
+    directory = (directory =='') ? '' : (directory.endsWith('/') ? directory : "${directory}/")
+    def files=findFiles(glob: "${directory}*.*")
+    for (file in files) {
+        if (!file.isDirectory()){
+            bytes += file.length
+        }
+    }
+    return bytes
+}
+
+String GetKeyStoreFileName()
+{
+    if (!env.PUBLISHER_NAME) return KEYSTORE_FILE_NAME
+    return "${PUBLISHER_NAME}_$KEYSTORE_FILE_NAME"
+}
+
+void ExportApkFromAAB(executableFile)
+{
+    def apksFile = executableFile.replace(".aab", ".apks")
+    def apksPath = "${BUILD_LOCATION}${CLIENT_PLATFORM}\\${apksFile}"
+    powershell script: "java -jar .\\bundletool-all.jar build-apks --bundle=${BUILD_LOCATION}${CLIENT_PLATFORM}\\${executableFile} --output=${apksPath} --ks=.\\Unity$BUILD_FILE_NAME\\${GetKeyStoreFileName()} --ks-pass=pass:\"$KEYSTORE_PASSWORD\" --ks-key-alias=theonestudio --key-pass=pass:\"$KEYSTORE_PASSWORD\" --mode=universal"
+    
+    //uncompress apks
+    def zipPath = apksPath.replace(".apks",".zip")
+    fileOperations([fileRenameOperation(destination: zipPath, source: apksPath)])
+    unzip zipFile: zipPath, dir: "${BUILD_LOCATION}${CLIENT_PLATFORM}\\"
+    def apkPath = "${BUILD_LOCATION}${CLIENT_PLATFORM}\\universal.apk"
+    def apkFile = executableFile.replace(".aab", ".apk")
+    def newApkPath = "${BUILD_LOCATION}${CLIENT_PLATFORM}\\${apkFile}"
+    fileOperations([fileRenameOperation(destination: newApkPath, source: apkPath)])
+}
