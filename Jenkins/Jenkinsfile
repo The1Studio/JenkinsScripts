@@ -111,7 +111,6 @@ pipeline
                     powershell script:"git reset --hard"
                     powershell script:"git submodule foreach --recursive git reset --hard"
                     powershell script:"Remove-Item -Recurse -Force .\\Build\\"
-                    powershell script:"Remove-Item -Recurse -Force .\\Unity$BUILD_FILE_NAME\\Library\\Bee\\"
                     echo "---- End cleaning   ----"
                     
                     echo "---- Update submodule ----"
@@ -120,7 +119,7 @@ pipeline
                     echo "---- End Update submodule   ----"
                     
                     // set build version and other info
-                    powershell script: "Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${BUILD_FILE_NAME}"
+                    powershell script: "JenkinsScripts\\Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${BUILD_FILE_NAME}"
                     //Build message is failed by default, then we will change it to success if build success
                     bat "echo __version: ${env.BUILD_VERSION} - number: ${env.BUILD_NUMBER}__ was built failed!!! > ${CHAT_NOTIFY_DESCRIPTION_FILE}"
                 }
@@ -259,6 +258,14 @@ pipeline
                 {
                     PostStatusGithub("success.txt")
                 }
+            }
+        }
+        
+        failure
+        {
+            script
+            {
+                powershell script:"Remove-Item -Recurse -Force .\\Unity$BUILD_FILE_NAME\\Library\\Bee\\"
             }
         }
 
@@ -535,9 +542,9 @@ void NotifyClientBuildResultToGithub()
     {
         bat "echo Failed to build client > message.txt"
         bat "-----Client-Report log---- >> message.txt"
-        Powershellx "Scripts\\Util_AnalyseUnityLog.ps1 -LogFile \".\\Build\\Logs\\Build-Client-Report.${CLIENT_PLATFORM}.log\" >> message.txt"
+        Powershellx "JenkinsScripts\\Scripts\\Util_AnalyseUnityLog.ps1 -LogFile \".\\Build\\Logs\\Build-Client-Report.${CLIENT_PLATFORM}.log\" >> message.txt"
         bat "-----Client log---- >> message.txt"
-        Powershellx "Scripts\\Util_AnalyseUnityLog.ps1 -LogFile \".\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" >> message.txt"
+        Powershellx "JenkinsScripts\\Scripts\\Util_AnalyseUnityLog.ps1 -LogFile \".\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" >> message.txt"
         PostStatusGithub("message.txt")
     }
 }
@@ -552,7 +559,7 @@ void PostStatusGithub(LogFile)
     url = env.BUILD_URL.replace("%","%%")
     bat "echo To view console log: ${url}consoleFull >> ${LogFile}"
     withCredentials([string(credentialsId: 'GitHub-PersonalAccessToken', variable: 'TOKEN')]) {
-        bat "powershell -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile .\\Scripts\\UpdatePRBuildStatus.ps1 -Logfile '${LogFile}' -PullRequestId ${env.ghprbPullId} -Token ${TOKEN} -GitUrlPR ${GIT_URL_PR}"
+        bat "powershell -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile .\\JenkinsScripts\\Scripts\\UpdatePRBuildStatus.ps1 -Logfile '${LogFile}' -PullRequestId ${env.ghprbPullId} -Token ${TOKEN} -GitUrlPR ${GIT_URL_PR}"
     }
 }
 
