@@ -4,6 +4,6 @@
 #>
 
 # Define our directory constant values
-$ProjectDir = Resolve-Path "$PSScriptRoot/.."
+$ProjectDir = Resolve-Path "$PSScriptRoot/../.."
 $BuildOutputDir = Join-Path "$ProjectDir" "Build"
 $ClientOutputDir = Join-Path "$BuildOutputDir" "Client"
