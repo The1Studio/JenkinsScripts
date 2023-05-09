@@ -20,5 +20,6 @@ namespace GameFoundation.BuildScripts.Runtime
         public static string Version     => `"$BuildVersion`";
         public static int    BuildNumber => $BuildNumber;
         public static string FullInfo    => `"v$BuildVersion - Build: $BuildNumber - $( Get-Date )`";
+        public static string ProjectName => `"$ProjectName`";
     }
 }"
