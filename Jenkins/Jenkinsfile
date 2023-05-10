@@ -46,6 +46,7 @@ pipeline
         SHOULD_OPTIMIZE_BUILD_SIZE = CheckTrueFalse(env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE)
         SHOULD_DEFAULT_ANDROID_KEY_STORE = CheckTrueFalse(env.PARAM_SHOULD_DEFAULT_ANDROID_KEY_STORE)
         UNITY_SCRIPTING_DEFINE_SYMBOLS = CheckParam(env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS, "TextMeshPro;ODIN_INSPECTOR;ODIN_INSPECTOR_3;EASY_MOBILE;EASY_MOBILE_PRO;EM_ADMOB;EM_URP;ADDRESSABLES_ENABLED")
+        BUILD_FILE_NAME = CheckParam(env.PARAM_BUILD_FILE_NAME, "BattleRush")
         BUILD_DOWNLOAD_URL = CheckParam(env.PARAM_BUILD_DOWNLOAD_URL, "https://the1studio-builds.s3.ap-southeast-1.amazonaws.com")
         CHAT_NOTIFY_DESCRIPTION_FILE = "chat_notify_description.txt"
         DISCORD_WEBHOOK_URL = CheckParam(env.PARAM_DISCORD_WEBHOOK_URL, "https://discord.com/api/webhooks/1048201767629897829/cA68S40j0uso30EP1hDUuP9t2o4NgY8CwxbAK4WVg4iB1P6oUmpkCciqqYDGju0pSvJY")
@@ -118,7 +119,7 @@ pipeline
                     echo "---- End Update submodule   ----"
                     
                     // set build version and other info
-                    powershell script: "JenkinsScripts\\Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${env.PARAM_BUILD_FILE_NAME}"
+                    powershell script: "JenkinsScripts\\Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${BUILD_FILE_NAME}"
                     //Build message is failed by default, then we will change it to success if build success
                     bat "echo __version: ${env.BUILD_VERSION} - number: ${env.BUILD_NUMBER}__ was built failed!!! > ${CHAT_NOTIFY_DESCRIPTION_FILE}"
                 }
@@ -264,10 +265,7 @@ pipeline
         {
             script
             {
-                powershell script:"git clean -fd"
-                powershell script:"git reset --hard"
-                powershell script:"git submodule foreach --recursive git reset --hard"
-                powershell script:"Remove-Item -Recurse -Force .\\Unity${env.PARAM_BUILD_FILE_NAME}\\Library\\Bee\\"
+                powershell script:"Remove-Item -Recurse -Force .\\Unity$BUILD_FILE_NAME\\Library\\Bee\\"
             }
         }
 
@@ -437,9 +435,9 @@ String GetOutput(platform)
 {
     switch (platform)
     {
-        case "android": return env.SHOULD_BUILD_APP_BUNDLE ? "${env.PARAM_BUILD_FILE_NAME}_${env.BUILD_VERSION}.aab" : "${env.PARAM_BUILD_FILE_NAME}_${env.BUILD_VERSION}.apk";
-        case "ios":     return "${env.PARAM_BUILD_FILE_NAME}_${env.BUILD_VERSION}.ipa";
-        case "webgl":   return "${env.PARAM_BUILD_FILE_NAME}";
+        case "android": return env.SHOULD_BUILD_APP_BUNDLE ? "${env.BUILD_FILE_NAME}_${env.BUILD_VERSION}.aab" : "${env.BUILD_FILE_NAME}_${env.BUILD_VERSION}.apk";
+        case "ios":     return "${env.BUILD_FILE_NAME}_${env.BUILD_VERSION}.ipa";
+        case "webgl":   return "${env.BUILD_FILE_NAME}";
         default:        return "default";
     }
 }
@@ -468,7 +466,7 @@ void BuildClient(executableFile)
 {
     try
     {
-        def buildCommand = "cd /D \"$unityEditorPath\" && Unity.exe -platforms ${CLIENT_PLATFORM} -scriptingBackend ${SCRIPTING_BACKEND} -quit -batchmode -projectPath \"${workspace}\\Unity${env.PARAM_BUILD_FILE_NAME}\" -executeMethod \"Build.BuildFromCommandLine\" -logFile \"${workspace}\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" -outputPath ${executableFile} -scriptingDefineSymbols ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS}"
+        def buildCommand = "cd /D \"$unityEditorPath\" && Unity.exe -platforms ${CLIENT_PLATFORM} -scriptingBackend ${SCRIPTING_BACKEND} -quit -batchmode -projectPath \"${workspace}\\Unity$BUILD_FILE_NAME\" -executeMethod \"Build.BuildFromCommandLine\" -logFile \"${workspace}\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" -outputPath ${executableFile} -scriptingDefineSymbols ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS}"
         
         getLicenseCommand = "cd /D \"$unityEditorPath\" && Unity.exe -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit";
         
@@ -621,7 +619,7 @@ void ExportApkFromAAB(executableFile)
 {
     def apksFile = executableFile.replace(".aab", ".apks")
     def apksPath = "${BUILD_LOCATION}${CLIENT_PLATFORM}\\${apksFile}"
-    powershell script: "java -jar .\\JenkinsScripts\\bundletool-all.jar build-apks --bundle=${BUILD_LOCATION}${CLIENT_PLATFORM}\\${executableFile} --output=${apksPath} --ks=.\\Unity${env.PARAM_BUILD_FILE_NAME}\\${GetKeyStoreFileName()} --ks-pass=pass:\"$KEYSTORE_PASSWORD\" --ks-key-alias=theonestudio --key-pass=pass:\"$KEYSTORE_PASSWORD\" --mode=universal"
+    powershell script: "java -jar .\\JenkinsScripts\\bundletool-all.jar build-apks --bundle=${BUILD_LOCATION}${CLIENT_PLATFORM}\\${executableFile} --output=${apksPath} --ks=.\\Unity$BUILD_FILE_NAME\\${GetKeyStoreFileName()} --ks-pass=pass:\"$KEYSTORE_PASSWORD\" --ks-key-alias=theonestudio --key-pass=pass:\"$KEYSTORE_PASSWORD\" --mode=universal"
     
     //uncompress apks
     def zipPath = apksPath.replace(".apks",".zip")
