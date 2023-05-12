@@ -225,8 +225,8 @@ pipeline
                     
                     for (platform in GetPlatformList()) 
                     {
-                        output = GetOutput(platform);
-                        artifact = "Client/$platform/$output";
+                        output = GetOutput(platform)
+                        artifact = "Client/$platform/$output"
                         downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                         buildSize = GetBuildSize(artifact)
                         UploadToS3(artifact, "$downloadPath/$platform/$output")
@@ -234,11 +234,13 @@ pipeline
                         
                         if (env.SHOULD_COMPRESS_BUILD)
                         {
+                            output = "${output}_${env.BUILD_VERSION}.zip";
                             zipFile = "${artifact}_${env.BUILD_VERSION}.zip"
                             powershell script: "Compress-Archive $artifact $zipFile"
-                            UploadToS3(artifact, "$downloadPath/$platform/$zipFile")
-                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$zipFile")
                             buildSize = GetBuildSize(zipFile)
+                            UploadToS3(artifact, "$downloadPath/$platform/$output")
+                            
+                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                             bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                         }
                         
@@ -246,10 +248,10 @@ pipeline
                         {
                             output = output.replace("aab", "apk")
                             artifact = artifact.replace("aab", "apk")
-                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                             buildSize = GetBuildSize(artifact)
                             UploadToS3(artifact, "$downloadPath/$platform/$output")
                             
+                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                             bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                             bat "echo __packageName: ${env.PACKAGE_NAME}__ >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                         }
