@@ -615,6 +615,7 @@ public def fileSize(artifact) {
 
 public def directorySize(directory) {
     def size = powershell returnStdout: true, script: "(gci $directory | measure Length -s).sum"
+    echo "$size"
     return size;
 }
 
