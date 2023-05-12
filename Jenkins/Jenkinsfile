@@ -603,7 +603,7 @@ public def fileSize(artifact) {
 }
 
 public def directorySize(directory) {
-    return powershell script: "(gci directory | measure Length -s).sum / 1Mb"
+    return powershell returnStdout: true, script: "(gci directory | measure Length -s).sum / 1Mb"
 }
 
 String GetKeyStoreFileName()
