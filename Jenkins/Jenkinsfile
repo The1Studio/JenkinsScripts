@@ -592,7 +592,7 @@ long GetBuildSize(artifact)
     if (artifact.contains(".")) {
         size = fileSize("Build/${artifact}")
     } else {
-        size = Double.valueOf(directorySize("Build/${artifact}"))
+        size = BigDecimal.valueOf(directorySize("Build/${artifact}"))
     }
     return (size / (1024 * 1024)).setScale(1, 0)
 }
