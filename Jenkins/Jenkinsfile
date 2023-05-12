@@ -234,7 +234,7 @@ pipeline
                         
                         if (env.SHOULD_COMPRESS_BUILD)
                         {
-                            zipFile = artifact + ".zip"
+                            zipFile = "${artifact}_${env.BUILD_VERSION}.zip"
                             powershell script: "Compress-Archive $artifact $zipFile"
                             UploadToS3(artifact, "$downloadPath/$platform/$zipFile")
                             downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$zipFile")
