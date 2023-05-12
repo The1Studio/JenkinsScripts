@@ -236,7 +236,7 @@ pipeline
                         {
                             output = "${output}_${env.BUILD_VERSION}.zip";
                             zipFile = "${artifact}_${env.BUILD_VERSION}.zip"
-                            powershell script: "Compress-Archive Build/$artifact Build/$zipFile"
+                            zip dir: "Build/$artifact", zipFile: "Build/$zipFile"
                             buildSize = GetBuildSize(zipFile)
                             UploadToS3(zipFile, "$downloadPath/$platform/$output")
                             
