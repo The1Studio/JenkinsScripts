@@ -45,6 +45,7 @@ pipeline
         SHOULD_BUILD_APP_BUNDLE = CheckTrueFalse(env.PARAM_SHOULD_BUILD_APP_BUNDLE)
         SHOULD_OPTIMIZE_BUILD_SIZE = CheckTrueFalse(env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE)
         SHOULD_DEFAULT_ANDROID_KEY_STORE = CheckTrueFalse(env.PARAM_SHOULD_DEFAULT_ANDROID_KEY_STORE)
+        SHOULD_COMPRESS_BUILD = CheckTrueFalse(env.PARAM_SHOULD_COMPRESS_BUILD)
         UNITY_SCRIPTING_DEFINE_SYMBOLS = CheckParam(env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS, "TextMeshPro;ODIN_INSPECTOR;ODIN_INSPECTOR_3;EASY_MOBILE;EASY_MOBILE_PRO;EM_ADMOB;EM_URP;ADDRESSABLES_ENABLED")
         BUILD_FILE_NAME = CheckParam(env.PARAM_BUILD_FILE_NAME, "BattleRush")
         BUILD_DOWNLOAD_URL = CheckParam(env.PARAM_BUILD_DOWNLOAD_URL, "https://the1studio-builds.s3.ap-southeast-1.amazonaws.com")
@@ -229,8 +230,18 @@ pipeline
                         downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                         buildSize = GetBuildSize(artifact)
                         UploadToS3(artifact, "$downloadPath/$platform/$output")
-                        
                         bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
+                        
+                        if (env.SHOULD_COMPRESS_BUILD)
+                        {
+                            zipFile = "$artifact.zip"
+                            powershell script: "Compress-Archive $artifact $zipFile"
+                            UploadToS3(artifact, "$downloadPath/$platform/$zipFile")
+                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$zipFile")
+                            buildSize = GetBuildSize(zipFile)
+                            bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
+                        }
+                        
                         if (platform == "android" && env.SHOULD_BUILD_APP_BUNDLE)
                         {
                             output = output.replace("aab", "apk")
@@ -581,7 +592,7 @@ long GetBuildSize(artifact)
     if (artifact.contains(".")) {
         size = fileSize("Build/${artifact}")
     } else {
-        size = directorySize("Build/${artifact}")
+        size = Float.valueOf(directorySize("Build/${artifact}"))
     }
     return (size / (1024 * 1024)).setScale(1, 0)
 }
@@ -603,7 +614,7 @@ public def fileSize(artifact) {
 }
 
 public def directorySize(directory) {
-    def size = powershell returnStdout: true, script: "(gci $directory | measure Length -s).sum / 1Mb"
+    def size = powershell returnStdout: true, script: "(gci $directory | measure Length -s).sum"
     return size;
 }
 
