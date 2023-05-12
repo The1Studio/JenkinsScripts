@@ -603,16 +603,7 @@ public def fileSize(artifact) {
 }
 
 public def directorySize(directory) {
-    long bytes = 0
-    directory = (directory?:'').replace('\\','/')
-    directory = (directory =='') ? '' : (directory.endsWith('/') ? directory : "${directory}/")
-    def files=findFiles(glob: "${directory}*.*")
-    for (file in files) {
-        if (!file.isDirectory()){
-            bytes += file.length
-        }
-    }
-    return bytes
+    return powershell script: "(gci directory | measure Length -s).sum / 1Mb"
 }
 
 String GetKeyStoreFileName()
