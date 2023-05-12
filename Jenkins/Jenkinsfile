@@ -614,9 +614,9 @@ public def fileSize(artifact) {
 }
 
 public def directorySize(directory) {
-    def size = (powershell returnStdout: true, script: "(gci $directory -recurse | measure Length -s).sum").trim()
+    def size = powershell returnStdout: true, script: "(gci $directory -recurse | measure Length -s).sum"
     echo "$size"
-    return size;
+    return size.trim();
 }
 
 String GetKeyStoreFileName()
