@@ -238,9 +238,9 @@ pipeline
                             zipFile = "${artifact}_${env.BUILD_VERSION}.zip"
                             powershell script: "Compress-Archive Build/$artifact Build/$zipFile"
                             buildSize = GetBuildSize(zipFile)
-                            UploadToS3(artifact, "$downloadPath/$platform/$output")
+                            UploadToS3(zipFile, "$downloadPath/$platform/$output")
                             
-                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
+                            downloadURL = GetDownloadURL(platform + "_zip", "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                             bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                         }
                         
