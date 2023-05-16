@@ -289,7 +289,7 @@ pipeline
                 powershell script:"git clean -fd"
                 powershell script:"git reset --hard"
                 powershell script:"git submodule foreach --recursive git reset --hard"
-                if ($BUILD_FILE_NAME) 
+                if (BUILD_FILE_NAME) 
                 {
                     powershell script:"Remove-Item -Recurse -Force .\\Unity$BUILD_FILE_NAME\\Library\\Bee\\"
                 }
