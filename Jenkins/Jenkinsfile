@@ -59,6 +59,8 @@ pipeline
         KEYSTORE_PASSWORD = CheckParam(env.PARAM_KEYSTORE_PASSWORD, "tothemoon")
         KEYSTORE_ALIAS_NAME = CheckParam(env.PARAM_KEYSTORE_ALIAS_NAME, "theonestudio")
         KEYSTORE_ALIAS_PASSWORD = CheckParam(env.PARAM_KEYSTORE_ALIAS_PASSWORD, "tothemoon")
+        FBINSTANT_UPLOAD_ACCESS_TOKEN = CheckParam(env.PARAM_FBINSTANT_UPLOAD_ACCESS_TOKEN, "")
+        APP_ID = CheckParam(env.PARAM_APP_ID, "")
         
         UNITY_ID_EMAIL = credentials('jenkins-id-for-unity-email')
         UNITY_ID_PASSWORD = credentials('jenkins-id-for-unity-password')
@@ -374,7 +376,7 @@ String GetChatChannelName()
     {
         case "origin/release":     return "release";
         case "origin/develop":     return "develop";
-        case "origin/staging":       return "staging";
+        case "origin/staging":     return "staging";
         case "origin/playtest":    return "playtest";
         default:                   return "build";
     }
@@ -382,11 +384,21 @@ String GetChatChannelName()
 
 String GetGameVersion(version)
 {
+    def version = GetGameVersionWithVersion(version)
+    if (env.FBINSTANT_UPLOAD_ACCESS_TOKEN)
+    {
+        version = "${version}.${env.BUILD_NUMBER}"
+    }
+    return version
+}
+
+String GetGameVersionWithVersion(version)
+{
     switch (env.GIT_BRANCH)
     {
         case "origin/release":     return env.BUILD_VERSION;
         case "origin/develop":     return "${version}-develop-${env.BUILD_NUMBER}";
-        case "origin/staging":       return "${version}-staging-${env.BUILD_NUMBER}";
+        case "origin/staging":     return "${version}-staging-${env.BUILD_NUMBER}";
         default:                   return "${version}-${StripPrefix(env.GIT_BRANCH, "origin/")}-${env.BUILD_NUMBER}";
     }
 }
