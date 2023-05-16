@@ -244,7 +244,7 @@ pipeline
                             
                             if (env.FBINSTANT_UPLOAD_ACCESS_TOKEN)
                             {
-                                bat "curl -X POST https://graph-video.facebook.com/$APP_ID/assets -F 'access_token=$FBINSTANT_UPLOAD_ACCESS_TOKEN' -F 'type=BUNDLE' -F 'asset=@./$zipFile' -F 'comment=The1 Jenkins Graph API upload'"
+                                bat "curl -X POST https://graph-video.facebook.com/$APP_ID/assets -F 'access_token=$FBINSTANT_UPLOAD_ACCESS_TOKEN' -F 'type=BUNDLE' -F 'asset=@./Build/$zipFile' -F 'comment=The1 Jenkins Graph API upload'"
                             }
                             
                             downloadURL = GetDownloadURL(platform + "_zip", "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
