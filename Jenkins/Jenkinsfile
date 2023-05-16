@@ -242,6 +242,11 @@ pipeline
                             buildSize = GetBuildSize(zipFile)
                             UploadToS3(zipFile, "$downloadPath/$platform/$output")
                             
+                            if (env.FBINSTANT_UPLOAD_ACCESS_TOKEN)
+                            {
+                                powershell script: "curl -X POST https://graph-video.facebook.com/${env.APP_ID}/assets -F 'access_token=${env.FBINSTANT_UPLOAD_ACCESS_TOKEN}' -F 'type=BUNDLE' -F 'asset=@./$zipFile' -F 'comment=The1 Jenkins Graph API upload'"
+                            }
+                            
                             downloadURL = GetDownloadURL(platform + "_zip", "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                             bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                         }
@@ -384,12 +389,12 @@ String GetChatChannelName()
 
 String GetGameVersion(version)
 {
-    def version = GetGameVersionWithVersion(version)
+    def gameVersion = GetGameVersionWithVersion(version)
     if (env.FBINSTANT_UPLOAD_ACCESS_TOKEN)
     {
-        version = "${version}.${env.BUILD_NUMBER}"
+        gameVersion = "${gameVersion}.${env.BUILD_NUMBER}"
     }
-    return version
+    return gameVersion
 }
 
 String GetGameVersionWithVersion(version)
