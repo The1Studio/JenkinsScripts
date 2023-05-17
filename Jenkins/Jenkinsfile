@@ -236,8 +236,8 @@ pipeline
                         
                         if (env.SHOULD_COMPRESS_BUILD)
                         {
-                            output = "${output}_${env.BUILD_VERSION}.zip";
-                            zipFile = "${artifact}_${env.BUILD_VERSION}.zip"
+                            output = "${output}_${env.BUILD_VERSION}_${env.BUILD_NUMBER}.zip";
+                            zipFile = "${artifact}_${env.BUILD_VERSION}_${env.BUILD_NUMBER}.zip"
                             zip dir: "Build/$artifact", zipFile: "Build/$zipFile"
                             buildSize = GetBuildSize(zipFile)
                             UploadToS3(zipFile, "$downloadPath/$platform/$output")
@@ -402,16 +402,6 @@ String GetChatChannelName()
 }
 
 String GetGameVersion(version)
-{
-    def gameVersion = GetGameVersionWithVersion(version)
-    if (env.APP_SECRET)
-    {
-        gameVersion = "${gameVersion}.${env.BUILD_NUMBER}"
-    }
-    return gameVersion
-}
-
-String GetGameVersionWithVersion(version)
 {
     switch (env.GIT_BRANCH)
     {
