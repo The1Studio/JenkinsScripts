@@ -247,7 +247,7 @@ pipeline
                             {
                                 def accessJson = bat encoding: 'UTF-8', returnStdout: true, script: "curl -X GET \"https://graph.facebook.com/oauth/access_token?client_id=${env.APP_ID}&client_secret=${env.APP_SECRET}&grant_type=client_credentials\""
                                 echo accessJson
-                                def jsonObject = readJSON text: GetEscapeString(accessJson.trim())
+                                def jsonObject = readJSON text: accessJson.trim()
                                 def accessToken = jsonObject.access_token
                                 bat script: "curl -X POST https://graph-video.facebook.com/${env.APP_ID}/assets -F 'access_token=$accessToken' -F 'type=BUNDLE' -F 'asset=@./Build/$zipFile' -F 'comment=The1 Jenkins Graph API upload'"
                             }
