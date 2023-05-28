@@ -9,26 +9,27 @@ pipeline {
         stage('Create Builder') {
             steps {
                 script {
-                    jenkinsBuilder.importBuildSettings([jobName                    : env.JOB_NAME,
-                                                        buildName                  : env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio',
-                                                        buildNumber                : env.BUILD_NUMBER,
-                                                        buildVersion               : env.BUILD_VERSION ?: '0.0.1',
-                                                        platform                   : 'ios',
-                                                        scriptingBackend           : 'il2cpp',
-                                                        unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS ?: '',
-                                                        unityIdEmail               : credentials('jenkins-id-for-unity-email'),
-                                                        unityIdPassword            : credentials('jenkins-id-for-unity-password'),
-                                                        unityIdLicense             : credentials('jenkins-id-for-unity-license'),
-                                                        uploadUrl                  : env.PARAM_BUILD_DOWNLOAD_URL ?: 'https://the1studio-builds.s3.ap-southeast-1.amazonaws.com',
-                                                        discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL ?: 'https://discord.com/api/webhooks/1048201767629897829/cA68S40j0uso30EP1hDUuP9t2o4NgY8CwxbAK4WVg4iB1P6oUmpkCciqqYDGju0pSvJY',
-                                                        rootPathAbsolute           : pwd(),
-                                                        unityProjectPathAbsolute   : "${pwd()}/Unity${env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio'}",
-                                                        unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME ?: 'Unity3D 2021.3.23f1'),
-                                                        isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true',
-                                                        isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true',
-                                                        isUploadBuild              : true,
-                                                        isNotifyToChatChannel      : true,
-                                                        signingTeamId              : env.PARAM_SIGNING_TEAM,])
+                    jenkinsBuilder
+                            .loadResource()
+                            .importBuildSettings([jobName                    : env.JOB_NAME,
+                                                  buildName                  : env.PARAM_BUILD_FILE_NAME,
+                                                  buildNumber                : env.BUILD_NUMBER,
+                                                  buildVersion               : env.BUILD_VERSION,
+                                                  platform                   : 'ios',
+                                                  scriptingBackend           : 'il2cpp',
+                                                  unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS,
+                                                  unityIdEmail               : credentials('jenkins-id-for-unity-email'),
+                                                  unityIdPassword            : credentials('jenkins-id-for-unity-password'),
+                                                  unityIdLicense             : credentials('jenkins-id-for-unity-license'),
+                                                  uploadDomain               : env.PARAM_BUILD_DOWNLOAD_URL,
+                                                  discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL,
+                                                  rootPathAbsolute           : pwd(),
+                                                  unityProjectPathAbsolute   : "${pwd()}/Unity${env.PARAM_BUILD_FILE_NAME}",
+                                                  unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME),
+                                                  isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true',
+                                                  isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true',
+                                                  isNotifyToChatChannel      : env.PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL == 'true',
+                                                  signingTeamId              : env.PARAM_SIGNING_TEAM_ID,])
                 }
             }
         }
@@ -69,12 +70,15 @@ pipeline {
             post {
                 always {
                     script {
-                        if (fileExists("Build/Logs/Build-Client.ios.log")) {
-                            archiveArtifacts artifacts: "Build/Logs/Build-Client.ios.log", allowEmptyArchive: true
+                        String logPathAbsolute = jenkinsBuilder.getLogPath { "Build-Client.${jenkinsBuilder.settings.platform}.log" }
+                        String reportPathAbsolute = jenkinsBuilder.getLogPath { "Build-Client-Report.${jenkinsBuilder.settings.platform}.log" }
+
+                        if (fileExists(logPathAbsolute)) {
+                            archiveArtifacts artifacts: logPathAbsolute, allowEmptyArchive: true
                         }
 
-                        if (fileExists("Build/Logs/Build-Client-Report.ios.log")) {
-                            archiveArtifacts artifacts: "Build/Logs/Build-Client-Report.ios.log", allowEmptyArchive: true
+                        if (fileExists(reportPathAbsolute)) {
+                            archiveArtifacts artifacts: reportPathAbsolute, allowEmptyArchive: true
                         }
                     }
                 }

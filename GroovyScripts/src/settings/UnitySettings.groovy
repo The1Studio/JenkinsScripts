@@ -14,7 +14,7 @@ class UnitySettings {
     public String unityIdPassword
     public String unityIdLicense
 
-    public String uploadUrl
+    public String uploadDomain
     public String discordWebhookUrl
 
     public String rootPathAbsolute
@@ -23,6 +23,5 @@ class UnitySettings {
 
     public Boolean isBuildDevelopment
     public Boolean isOptimizeBuildSize
-    public Boolean isUploadBuild
     public Boolean isNotifyToChatChannel
 }

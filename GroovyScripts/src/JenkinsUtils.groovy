@@ -1,38 +1,28 @@
-static void uploadToS3(def ws, String file, String path) {
-    ws.withAWS(region: 'ap-southeast-1', credentials: 'the1-s3-credential') {
-        ws.s3Upload(file: file, bucket: 'the1studio-builds', path: path)
-    }
-}
+class JenkinsUtils {
+    def ws
+    def defaultValues
 
-static long findSizeInMB(def ws, String path) {
-    return fileSize(ws, path) / (1024 * 1024)
-}
-
-static long fileSize(def ws, String path) {
-    long bytes = 0
-
-    if (path == null || (path = path.trim()) == '') {
-        return -1
+    JenkinsUtils(def ws) {
+        this.ws = ws
     }
 
-    path = path.replace('\\', '/')
-
-    if (path.endsWith('/')) {
-        path = path.substring(0, path.length() - 1)
+    JenkinsUtils loadResource() {
+        this.defaultValues = this.ws.readJSON(text: this.ws.libraryResource('default-values.json'))
+        return this
     }
 
-    def f = new File(path)
-    if (f.isFile()) {
-        return f.length()
-    }
+    void uploadToS3(String file, String path) {
+        def s3Settings = this.defaultValues['s3-settings']
 
-    for (file in ws.findFiles(glob: "${path}/*.*")) {
-        if (!file.isDirectory()) {
-            bytes += file.length
+        this.ws.withAWS(region: s3Settings['region'], credentials: s3Settings['credentials']) {
+            this.ws.s3Upload(file: file, bucket: s3Settings['bucket'], path: path)
         }
     }
 
-    return bytes
+    long fileSizeInMB(String path) {
+        if (this.ws.isUnix()) {
+            return Long.parseLong(this.ws.sh(returnStdout: true, script: "du -k $path | awk '{print \$1}'").trim() as String) / 1024
+        }
+        return Long.parseLong(this.ws.powershell(returnStdout: true, script: "Write-Host((Get-Item $path).length)").trim() as String) / (1024 * 1024)
+    }
 }
-
-return this

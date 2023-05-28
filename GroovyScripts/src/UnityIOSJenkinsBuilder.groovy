@@ -13,6 +13,17 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
     }
 
     @Override
+    UnityIOSJenkinsBuilder importBuildSettings(Object buildSetting) throws Exception {
+        super.importBuildSettings(buildSetting)
+
+        if (this.settings.uploadDomain == null || this.settings.uploadDomain.isBlank()) {
+            this.settings.uploadDomain = this.jenkinsUtils.defaultValues['s3-settings']['domain']
+        }
+
+        return this
+    }
+
+    @Override
     void build() throws Exception {
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
@@ -39,12 +50,12 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
         this.ws.dir(this.getBuildPathRelative { '' }) {
             // If we have Podfile, and we don't have xcworkspace, we need to run pod install
             if (this.ws.fileExists('Podfile') && !this.ws.fileExists('Unity-iPhone.xcworkspace')) {
-                this.ws.sh 'pod install --allow-root'
+                this.ws.sh 'pod install --silent --allow-root'
             }
 
             // Archive and export ipa
-            this.ws.sh "xcodebuild -scheme Unity-iPhone -configuration Release -sdk iphoneos -workspace Unity-iPhone.xcworkspace archive -archivePath ${this.settings.buildName}.xcarchive"
-            this.ws.sh "xcodebuild -exportArchive -archivePath ${this.settings.buildName}.xcarchive -exportOptionsPlist info.plist -exportPath ${this.settings.buildName}.ipa"
+            this.ws.sh "xcodebuild -quiet -scheme Unity-iPhone -configuration Release -sdk iphoneos -workspace Unity-iPhone.xcworkspace archive -archivePath ${this.settings.buildName}.xcarchive"
+            this.ws.sh "xcodebuild -quiet -exportArchive -archivePath ${this.settings.buildName}.xcarchive -exportOptionsPlist info.plist -exportPath ${this.settings.buildName}.ipa"
 
             // Check if we have ipa
             if (!this.ws.fileExists("${this.settings.buildName}.ipa")) {
@@ -55,10 +66,6 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
 
     @Override
     void uploadBuild() throws Exception {
-        if (!this.settings.isUploadBuild) {
-            return
-        }
-
         def buildName = this.settings.buildName
         def uploadUrl = this.getUploadUrl { buildName }
 
@@ -66,20 +73,26 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
             String archiveDirectory = "${buildName}.xcarchive"
             String ipaDirectory = "${buildName}.ipa"
 
-            String archiveZipFile = "${buildName}-${this.settings.buildNumber}.ipa.zip"
-            String ipaZipFile = "${buildName}-${this.settings.buildNumber}.xcarchive.zip"
+            String archiveZipFile = "${buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.xcarchive.zip"
+            String ipaZipFile = "${buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.ipa.zip"
 
             this.ws.sh "zip -6 -q -r '${archiveZipFile}' '${archiveDirectory}'"
             this.ws.sh "zip -6 -q -r '${ipaZipFile}' '${ipaDirectory}'"
 
-            this.buildSizeArchive = JenkinsUtils.findSizeInMB(this.ws, "${archiveZipFile}")
-            this.buildSizeIpa = JenkinsUtils.findSizeInMB(this.ws, "${ipaZipFile}")
+            this.buildSizeArchive = this.jenkinsUtils.fileSizeInMB(archiveZipFile)
+            this.buildSizeIpa = this.jenkinsUtils.fileSizeInMB(ipaZipFile)
 
-            this.uploadArchiveUrl = "$uploadUrl/${archiveZipFile}"
-            this.uploadIpaUrl = "$uploadUrl/${ipaZipFile}"
+            this.ws.echo "Archive build size: ${this.buildSizeArchive} MB"
+            this.ws.echo "IPA build size: ${this.buildSizeIpa} MB"
 
-            JenkinsUtils.uploadToS3(this.ws, archiveZipFile, this.uploadArchiveUrl)
-            JenkinsUtils.uploadToS3(this.ws, ipaZipFile, this.uploadIpaUrl)
+            this.jenkinsUtils.uploadToS3(archiveZipFile, "$uploadUrl/${archiveZipFile}")
+            this.jenkinsUtils.uploadToS3(ipaZipFile, "$uploadUrl/${ipaZipFile}")
+
+            this.uploadArchiveUrl = "${this.settings.uploadDomain}/$uploadUrl/${archiveZipFile}"
+            this.uploadIpaUrl = "${this.settings.uploadDomain}/$uploadUrl/${ipaZipFile}"
+
+            this.ws.echo "Archive build url: ${this.uploadArchiveUrl}"
+            this.ws.echo "IPA build url: ${this.uploadIpaUrl}"
         }
     }
 
@@ -95,8 +108,8 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
             message = """
                 __version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built successfully !!!__
                 ${this.settings.platform} (${this.settings.jobName}) Build 
-                IPA: ${this.uploadIpaUrl}.ipa.zip - ${this.buildSizeIpa} MB
-                XCArchive: ${this.uploadArchiveUrl}.xcarchive.zip - ${this.buildSizeArchive} MB
+                IPA: ${this.uploadIpaUrl} - ${this.buildSizeIpa} MB
+                XCArchive: ${this.uploadArchiveUrl} - ${this.buildSizeArchive} MB
             """.stripMargin()
         }
 
@@ -112,8 +125,7 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
     }
 
     @Override
-    void notifyToGithub() throws Exception {
-    }
+    void notifyToGithub() throws Exception {}
 
     String getLogPath(Closure closure) {
         return "${this.settings.rootPathAbsolute}/Build/Logs/${closure(this)}"
@@ -123,7 +135,13 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
         return "Build/Client/ios/${this.settings.buildName}/${closure(this)}"
     }
 
-    String getUploadUrl(Closure closure) {
-        return "${this.settings.uploadUrl}/jobs/${this.settings.jobName}/${this.settings.buildNumber}/Build/Client/${this.settings.platform}/${closure(this)}"
+    String getUploadUrl(Closure closure, boolean stripDomain = true) {
+        String url = "jobs/${this.settings.jobName}/${this.settings.buildNumber}/Build/Client/${this.settings.platform}/${closure(this)}"
+
+        if (stripDomain) {
+            return url
+        }
+
+        return "${this.settings.uploadDomain}/${url}"
     }
 }

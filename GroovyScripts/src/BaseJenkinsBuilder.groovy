@@ -2,10 +2,15 @@ abstract class BaseJenkinsBuilder<TThis extends BaseJenkinsBuilder, TBuildSettin
 
     protected TBuildSetting settings
     protected def ws
+    protected JenkinsUtils jenkinsUtils
 
     BaseJenkinsBuilder(def ws) {
         this.ws = ws
-        notifyMessage = ''
+    }
+
+    TThis loadResource() throws Exception {
+        this.jenkinsUtils = new JenkinsUtils(this.ws).loadResource()
+        return this as TThis
     }
 
     TThis importBuildSettings(def buildSetting) throws Exception {
