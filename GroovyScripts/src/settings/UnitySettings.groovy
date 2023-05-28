@@ -5,6 +5,7 @@ class UnitySettings {
     public String jobName
     public String buildName
     public String buildNumber
+    public String buildVersion
     public String platform
     public String scriptingBackend
     public String unityScriptingDefineSymbols

@@ -5,6 +5,7 @@ abstract class BaseJenkinsBuilder<TThis extends BaseJenkinsBuilder, TBuildSettin
 
     BaseJenkinsBuilder(def ws) {
         this.ws = ws
+        notifyMessage = ''
     }
 
     TThis importBuildSettings(def buildSetting) throws Exception {
