@@ -1,6 +1,11 @@
 abstract class BaseJenkinsBuilder<TThis extends BaseJenkinsBuilder, TBuildSetting> {
 
     protected TBuildSetting settings
+    protected def ws
+
+    BaseJenkinsBuilder(def ws) {
+        this.ws = ws
+    }
 
     TThis importBuildSettings(def buildSetting) throws Exception {
         this.settings = buildSetting as TBuildSetting

@@ -1,14 +1,14 @@
-static void uploadToS3(file, path) {
-    withAWS(region: 'ap-southeast-1', credentials: 'the1-s3-credential') {
-        s3Upload(file: file, bucket: 'the1studio-builds', path: path)
+static void uploadToS3(def ws, String file, String path) {
+    ws.withAWS(region: 'ap-southeast-1', credentials: 'the1-s3-credential') {
+        ws.s3Upload(file: file, bucket: 'the1studio-builds', path: path)
     }
 }
 
-static long findSizeInMB(String path) {
-    return fileSize(path) / (1024 * 1024)
+static long findSizeInMB(def ws, String path) {
+    return fileSize(ws, path) / (1024 * 1024)
 }
 
-static long fileSize(String path) {
+static long fileSize(def ws, String path) {
     long bytes = 0
 
     if (path == null || (path = path.trim()) == '') {
@@ -26,22 +26,13 @@ static long fileSize(String path) {
         return f.length()
     }
 
-    for (file in findFiles(glob: "${path}/*.*")) {
+    for (file in ws.findFiles(glob: "${path}/*.*")) {
         if (!file.isDirectory()) {
             bytes += file.length
         }
     }
 
     return bytes
-}
-
-static def InstantiateJenkinsBuilder(String platform) {
-    switch (platform) {
-        case 'android': return new Object()
-        case 'ios': return new UnityIOSJenkinsBuilder()
-        case 'web': return new Object()
-        default: return null
-    }
 }
 
 return this
