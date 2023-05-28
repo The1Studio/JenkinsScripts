@@ -18,7 +18,7 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
                         -batchmode \\ 
                         -projectPath '${this.settings.unityProjectPathAbsolute}' \\ 
                         -executeMethod Build.BuildFromCommandLine \\ 
-                        -logFile '${this.settings.getLogPath { "Build-Client.${this.settings.platform}.log" }}' \\ 
+                        -logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}' \\ 
                         -iosSigningTeamId '${this.settings.signingTeamId}' \\
                         -outputPath '${this.settings.buildName}' \\
                         -scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}' \\
@@ -35,7 +35,7 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
             this.ws.sh command
         }
 
-        this.ws.dir(this.settings.getBuildPathRelative { '' }) {
+        this.ws.dir(this.getBuildPathRelative { '' }) {
             // If we have Podfile, and we don't have xcworkspace, we need to run pod install
             if (this.ws.fileExists('Podfile') && !this.ws.fileExists('Unity-iPhone.xcworkspace')) {
                 this.ws.sh 'pod install --allow-root'
@@ -55,11 +55,11 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
     @Override
     void uploadBuild() throws Exception {
         def buildName = this.settings.buildName
-        def uploadUrl = this.settings.getUploadUrl { buildName }
+        def uploadUrl = this.getUploadUrl { buildName }
 
-        this.ws.dir(this.settings.getBuildPathRelative { '' }) {
-            def archiveDirectory = this.settings.getBuildPathRelative { "${buildName}.xcarchive" }
-            def ipaDirectory = this.settings.getBuildPathRelative { "${buildName}.ipa" }
+        this.ws.dir(this.getBuildPathRelative { '' }) {
+            def archiveDirectory = this.getBuildPathRelative { "${buildName}.xcarchive" }
+            def ipaDirectory = this.getBuildPathRelative { "${buildName}.ipa" }
 
             this.ws.sh "zip -6 -r '${buildName}.ipa.zip' '${buildName}.ipa'"
             this.ws.sh "zip -6 -r '${buildName}.xcarchive.zip' '${buildName}.xcarchive'"
@@ -80,5 +80,17 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
     @Override
     void notifyToGithub() throws Exception {
 
+    }
+
+    String getLogPath(Closure closure) {
+        return "${this.settings.rootPathAbsolute}/Build/Logs/${closure(this)}"
+    }
+
+    String getBuildPathRelative(Closure closure) {
+        return "Build/Client/ios/${this.settings.buildName}/${closure(this)}"
+    }
+
+    String getUploadUrl(Closure closure) {
+        return "${this.settings.uploadUrl}/jobs/${this.settings.jobName}/${this.settings.buildNumber}/Build/Client/${this.settings.platform}/${closure(this)}"
     }
 }

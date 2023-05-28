@@ -24,16 +24,4 @@ class UnitySettings {
     public Boolean isOptimizeBuildSize
     public Boolean isUploadBuild
     public Boolean isNotifyToChatChannel
-
-    String getLogPath(Closure closure) {
-        return "${this.rootPathAbsolute}/Build/Logs/${closure(this)}"
-    }
-
-    String getBuildPathRelative(Closure closure) {
-        return "Build/Client/ios/${this.buildName}/${closure(this)}"
-    }
-
-    String getUploadUrl(Closure closure) {
-        return "${this.uploadUrl}/jobs/${this.jobName}/${this.buildNumber}/Build/Client/${this.platform}/${closure(this)}"
-    }
 }
