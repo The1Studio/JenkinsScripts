@@ -1,9 +1,10 @@
-abstract class BaseJenkinsBuilder<TBuildSetting> {
+abstract class BaseJenkinsBuilder<TThis extends BaseJenkinsBuilder, TBuildSetting> {
 
     protected TBuildSetting settings
 
-    void importBuildSettings(def buildSetting) throws Exception {
+    TThis importBuildSettings(def buildSetting) throws Exception {
         this.settings = buildSetting as TBuildSetting
+        return this as TThis
     }
 
     abstract void build() throws Exception

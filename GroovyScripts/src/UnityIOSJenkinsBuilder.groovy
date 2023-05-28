@@ -1,6 +1,6 @@
 import settings.UnityIOSSettings
 
-class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSSettings> {
+class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, UnityIOSSettings> {
 
     @Override
     void build() throws Exception {

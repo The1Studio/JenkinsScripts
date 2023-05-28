@@ -1,6 +1,6 @@
 @Library('jenkins-helper') _
 
-def jenkinsBuilder
+UnityIOSJenkinsBuilder jenkinsBuilder
 
 pipeline {
     agent { label "macos" }
@@ -9,27 +9,26 @@ pipeline {
         stage('Create Builder') {
             steps {
                 script {
-                    jenkinsBuilder = JenkinsUtils.InstantiateJenkinsBuilder('ios')
-
-                    jenkinsBuilder.importBuildSettings([jobName                    : env.JOB_NAME,
-                                                        buildName                  : env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio',
-                                                        buildNumber                : env.BUILD_NUMBER,
-                                                        platform                   : 'ios',
-                                                        scriptingBackend           : 'il2cpp',
-                                                        unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS ?: '',
-                                                        unityIdEmail               : credentials('jenkins-id-for-unity-email'),
-                                                        unityIdPassword            : credentials('jenkins-id-for-unity-password'),
-                                                        unityIdLicense             : credentials('jenkins-id-for-unity-license'),
-                                                        uploadUrl                  : env.PARAM_BUILD_DOWNLOAD_URL ?: 'https://the1studio-builds.s3.ap-southeast-1.amazonaws.com',
-                                                        discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL ?: 'https://discord.com/api/webhooks/1048201767629897829/cA68S40j0uso30EP1hDUuP9t2o4NgY8CwxbAK4WVg4iB1P6oUmpkCciqqYDGju0pSvJY',
-                                                        rootPathAbsolute           : pwd(),
-                                                        unityProjectPathAbsolute   : "${pwd()}/Unity${env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio'}",
-                                                        unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME ?: 'Unity3D 2021.3.23f1'),
-                                                        isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT ? true : false,
-                                                        isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE ? true : false,
-                                                        isUploadBuild              : true,
-                                                        isNotifyToChatChannel      : true,
-                                                        signingTeamId              : env.PARAM_SIGNING_TEAM,])
+                    jenkinsBuilder = new UnityIOSJenkinsBuilder()
+                            .importBuildSettings([jobName                    : env.JOB_NAME,
+                                                  buildName                  : env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio',
+                                                  buildNumber                : env.BUILD_NUMBER,
+                                                  platform                   : 'ios',
+                                                  scriptingBackend           : 'il2cpp',
+                                                  unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS ?: '',
+                                                  unityIdEmail               : credentials('jenkins-id-for-unity-email'),
+                                                  unityIdPassword            : credentials('jenkins-id-for-unity-password'),
+                                                  unityIdLicense             : credentials('jenkins-id-for-unity-license'),
+                                                  uploadUrl                  : env.PARAM_BUILD_DOWNLOAD_URL ?: 'https://the1studio-builds.s3.ap-southeast-1.amazonaws.com',
+                                                  discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL ?: 'https://discord.com/api/webhooks/1048201767629897829/cA68S40j0uso30EP1hDUuP9t2o4NgY8CwxbAK4WVg4iB1P6oUmpkCciqqYDGju0pSvJY',
+                                                  rootPathAbsolute           : pwd(),
+                                                  unityProjectPathAbsolute   : "${pwd()}/Unity${env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio'}",
+                                                  unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME ?: 'Unity3D 2021.3.23f1'),
+                                                  isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT ? true : false,
+                                                  isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE ? true : false,
+                                                  isUploadBuild              : true,
+                                                  isNotifyToChatChannel      : true,
+                                                  signingTeamId              : env.PARAM_SIGNING_TEAM,])
                 }
             }
         }
@@ -53,7 +52,7 @@ pipeline {
                     echo "---- End Update submodule   ----"
 
                     // set build version and other info
-                    sh "JenkinsScripts/BashScripts/set-game-version.sh \"${env.BUILD_VERSION}\" \"${env.BUILD_NUMBER}\" \"${env.GIT_COMMIT}\" \"${env.BUILD_FILE_NAME}\""
+                    sh "JenkinsScripts/BashScripts/set-game-version.sh \"${env.BUILD_VERSION}\" \"${env.BUILD_NUMBER}\" \"${env.GIT_COMMIT}\" \"${env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio'}\""
                     // Build message is failed by default, then we will change it to success if build success
                     sh "echo \"__version: ${env.BUILD_VERSION} - number: ${env.BUILD_NUMBER}__ was built failed!!!\" > ${CHAT_NOTIFY_DESCRIPTION_FILE}"
                 }
