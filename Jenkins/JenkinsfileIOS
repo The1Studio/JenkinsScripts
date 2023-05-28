@@ -1,93 +1,44 @@
-def jenkinsUtils 
+@Library('jenkins-helper') _
 
-pipeline
-{
+def jenkinsBuilder
+
+pipeline {
     agent { label "macos" }
 
-    environment
-    {
-        BUILD_LOCATION                  = ".\\Build\\Client\\"
-        CHAT_NOTIFY_DESCRIPTION_FILE    = "chat_notify_description.txt"
-        UNITY_ID_EMAIL                  = credentials('jenkins-id-for-unity-email')
-        UNITY_ID_PASSWORD               = credentials('jenkins-id-for-unity-password')
-        UNITY_ID_LICENSE                = credentials('jenkins-id-for-unity-license')
+    stages {
+        stage('Create Builder') {
+            steps {
+                script {
+                    jenkinsBuilder = JenkinsUtils.InstantiateJenkinsBuilder('ios')
 
-        platform                        = 'ios'
-    }
-
-    stages
-    {
-        stage('Load Groovy Scripts')
-        {
-            steps
-            {
-                script
-                {
-                    jenkinsUtils = load "${pwd()}/JenkinsScripts/GroovyScripts/JenkinsUtils.groovy"
-
-                    // set environment variables
-                    env.SHOULD_BUILD_DEVELOPMENT        = jenkinsUtils.toJenkinsBoolean(env.PARAM_SHOULD_BUILD_DEVELOPMENT)
-                    env.SHOULD_OPTIMIZE_BUILD_SIZE      = jenkinsUtils.toJenkinsBoolean(env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE)
-                    env.UNITY_TOOL_NAME                 = jenkinsUtils.ifNullOrEmpty(env.PARAM_UNITY_TOOL_NAME, 'Unity3D 2021.3.14f1')
-                    env.UNITY_SCRIPTING_DEFINE_SYMBOLS  = jenkinsUtils.ifNullOrEmpty(env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS, 'TextMeshPro;ODIN_INSPECTOR;ODIN_INSPECTOR_3;EASY_MOBILE;EASY_MOBILE_PRO;EM_ADMOB;EM_URP;ADDRESSABLES_ENABLED')
-                    env.BUILD_FILE_NAME                 = jenkinsUtils.ifNullOrEmpty(env.PARAM_BUILD_FILE_NAME, 'TheOneStudioGame')
-                    env.BUILD_DOWNLOAD_URL              = jenkinsUtils.ifNullOrEmpty(env.PARAM_BUILD_DOWNLOAD_URL, 'https://the1studio-builds.s3.ap-southeast-1.amazonaws.com')
-                    env.DISCORD_WEBHOOK_URL             = jenkinsUtils.ifNullOrEmpty(env.PARAM_DISCORD_WEBHOOK_URL, 'https://discord.com/api/webhooks/1048201767629897829/cA68S40j0uso30EP1hDUuP9t2o4NgY8CwxbAK4WVg4iB1P6oUmpkCciqqYDGju0pSvJY')
-                    env.GIT_URL_PR                      = jenkinsUtils.ifNullOrEmpty(env.PARAM_GIT_URL_PR, 'TheOneStudio/')
-                    env.PACKAGE_NAME                    = jenkinsUtils.ifNullOrEmpty(env.PARAM_PACKAGE_NAME, '')
-                    env.PUBLISHER_NAME                  = jenkinsUtils.ifNullOrEmpty(env.PARAM_PUBLISHER_NAME, '')
-                    env.BUILDING_PULL_REQUEST           = jenkinsUtils.hasBuildingTargetBranch()
-                    env.DESTINATION_BRANCH              = jenkinsUtils.getDestinationBranch()
-                    env.NOTIFY_GITHUB                   = jenkinsUtils.shouldNotifyGithub()
-                    env.NOTIFY_CHAT_CHANNEL             = jenkinsUtils.shouldNotifyToChatChannel()
-                    env.UPLOAD_BUILD                    = jenkinsUtils.shouldUploadBuild()
-                    env.SCRIPTING_BACKEND               = jenkinsUtils.getScriptingBackend()
-                    env.GIT_LOCAL_BRANCH                = jenkinsUtils.stripPrefix(env.GIT_BRANCH, 'origin/')
-
-                    env.ROOT_PATH                       = pwd()
-                    env.UNITY_PROJECT_PATH              = "${env.ROOT_PATH}/Unity${env.BUILD_FILE_NAME}"
+                    jenkinsBuilder.importBuildSettings([jobName                    : env.JOB_NAME,
+                                                        buildName                  : env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio',
+                                                        buildNumber                : env.BUILD_NUMBER,
+                                                        platform                   : 'ios',
+                                                        scriptingBackend           : 'il2cpp',
+                                                        unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS ?: '',
+                                                        unityIdEmail               : credentials('jenkins-id-for-unity-email'),
+                                                        unityIdPassword            : credentials('jenkins-id-for-unity-password'),
+                                                        unityIdLicense             : credentials('jenkins-id-for-unity-license'),
+                                                        uploadUrl                  : env.PARAM_BUILD_DOWNLOAD_URL ?: 'https://the1studio-builds.s3.ap-southeast-1.amazonaws.com',
+                                                        discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL ?: 'https://discord.com/api/webhooks/1048201767629897829/cA68S40j0uso30EP1hDUuP9t2o4NgY8CwxbAK4WVg4iB1P6oUmpkCciqqYDGju0pSvJY',
+                                                        rootPathAbsolute           : pwd(),
+                                                        unityProjectPathAbsolute   : "${pwd()}/Unity${env.PARAM_BUILD_FILE_NAME ?: 'TheOneStudio'}",
+                                                        unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME ?: 'Unity3D 2021.3.23f1'),
+                                                        isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT ? true : false,
+                                                        isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE ? true : false,
+                                                        isUploadBuild              : true,
+                                                        isNotifyToChatChannel      : true,
+                                                        signingTeamId              : env.PARAM_SIGNING_TEAM,])
                 }
             }
         }
 
-        stage("Clean and sync")
-        {
+        stage("Clean and sync") {
             options { timeout(time: 1, unit: 'HOURS') }
 
-            steps
-            {
-                script
-                {
-                    // log our environment vars
-                    echo "==== param ===="
-                    echo "PARAM_UNITY_TOOL_NAME = ${env.PARAM_UNITY_TOOL_NAME} ${env.PARAM_UNITY_TOOL_NAME as Boolean}"
-                    echo " "
-                    echo "==== env ===="
-                    echo "BUILDING_PULL_REQUEST = ${env.BUILDING_PULL_REQUEST} ${env.BUILDING_PULL_REQUEST as Boolean}"
-                    echo "DESTINATION_BRANCH = ${env.DESTINATION_BRANCH} ${env.DESTINATION_BRANCH as Boolean}"
-                    echo "NOTIFY_GITHUB = ${env.NOTIFY_GITHUB} ${env.NOTIFY_GITHUB as Boolean}"
-                    echo "NOTIFY_CHAT_CHANNEL = ${env.NOTIFY_CHAT_CHANNEL} ${env.NOTIFY_CHAT_CHANNEL as Boolean}"
-                    echo "RUN_UNIT_TESTS = ${env.RUN_UNIT_TESTS} ${env.RUN_UNIT_TESTS as Boolean}"
-                    echo "UPLOAD_BUILD = ${env.UPLOAD_BUILD} ${env.UPLOAD_BUILD as Boolean}"
-                    echo "BOT_NAME = ${env.BOT_NAME}"
-                    echo "SCRIPTING_BACKEND = ${env.SCRIPTING_BACKEND}"
-                    echo "GIT_LOCAL_BRANCH = ${env.GIT_LOCAL_BRANCH} ${env.GIT_LOCAL_BRANCH as Boolean}"
-                    echo "UNITY_TOOL_NAME = ${env.UNITY_TOOL_NAME} ${env.UNITY_TOOL_NAME as Boolean}"
-
-                    echo "SHOULD_BUILD_DEVELOPMENT = ${env.SHOULD_BUILD_DEVELOPMENT} ${env.SHOULD_BUILD_DEVELOPMENT as Boolean}"
-                    echo "SHOULD_OPTIMIZE_BUILD_SIZE = ${env.SHOULD_OPTIMIZE_BUILD_SIZE} ${env.SHOULD_OPTIMIZE_BUILD_SIZE as Boolean}"
-                    echo "UNITY_SCRIPTING_DEFINE_SYMBOLS = ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS} ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS as Boolean}"
-                    echo " "
-
-                    // log built in environment vars
-                    echo "==== built-in ===="
-                    echo "GIT_BRANCH = ${env.GIT_BRANCH}"
-                    echo "ghprbTargetBranch = ${env.ghprbTargetBranch}"
-                    echo "ghprbSourceBranch = ${env.ghprbSourceBranch}"
-                    echo "BUILD_NUMBER = ${env.BUILD_NUMBER}"
-                    echo "GIT_COMMIT = ${env.GIT_COMMIT}"
-                    echo " "
-                    
+            steps {
+                script {
                     echo "---- Start cleaning ----"
                     sh "git clean -fd"
                     sh "git reset --hard"
@@ -95,150 +46,73 @@ pipeline
                     sh "git submodule foreach --recursive git reset --hard"
                     sh "rm -rf .\\Build\\"
                     echo "---- End cleaning   ----"
-                    
+
                     echo "---- Update submodule ----"
                     sh "git submodule update --init"
                     sh "git submodule update"
                     echo "---- End Update submodule   ----"
-                    
+
                     // set build version and other info
-                    sh "JenkinsScripts/BashScripts/set-game-version.sh \"${env.BUILD_VERSION}\" \"${env.BUILD_NUMBER}\" \"${env.GIT_COMMIT}\" \"${BUILD_FILE_NAME}\""
-                    //Build message is failed by default, then we will change it to success if build success
+                    sh "JenkinsScripts/BashScripts/set-game-version.sh \"${env.BUILD_VERSION}\" \"${env.BUILD_NUMBER}\" \"${env.GIT_COMMIT}\" \"${env.BUILD_FILE_NAME}\""
+                    // Build message is failed by default, then we will change it to success if build success
                     sh "echo \"__version: ${env.BUILD_VERSION} - number: ${env.BUILD_NUMBER}__ was built failed!!!\" > ${CHAT_NOTIFY_DESCRIPTION_FILE}"
                 }
             }
         }
 
-        stage("Build Client (IOS)")
-        {
+        stage("Build Client (IOS)") {
             options { timeout(time: 2, unit: 'HOURS') }
 
-            environment
-            {
-                unityEditorPath = tool name: env.UNITY_TOOL_NAME
+            steps {
+                script {
+                    jenkinsBuilder.build()
+                }
             }
 
-            steps
-            {
-                script
-                {
-                    echo 'Start building ios client'
-                    buildClient(jenkinsUtils.getOutput("ios"), jenkinsUtils)
-                    echo 'Finish building ios client'
+            post {
+                always {
+                    script {
+                        if (fileExists("Build/Logs/Build-Client.ios.log")) {
+                            archiveArtifacts artifacts: "Build/Logs/Build-Client.ios.log", allowEmptyArchive: true
+                        }
+
+                        if (fileExists("Build/Logs/Build-Client-Report.ios.log")) {
+                            archiveArtifacts artifacts: "Build/Logs/Build-Client-Report.ios.log", allowEmptyArchive: true
+                        }
+                    }
                 }
             }
         }
-        
-        stage("Upload Build")
-        {
+
+        stage("Upload Build") {
             options { timeout(time: 75, unit: 'MINUTES') }
 
-            steps
-            {
-                script
-                {
+            steps {
+                script {
                     sh "echo \"__version: ${env.BUILD_VERSION} - number: ${env.BUILD_NUMBER}__ was built successfully !!!\" > ${CHAT_NOTIFY_DESCRIPTION_FILE}"
-                    
-                    def uploadPath = "jobs/${JOB_NAME}/${env.BUILD_NUMBER}/Build/Client"
-                    def output = jenkinsUtils.getOutput("ios")
-                    def buildPath = "Client/ios/${output}"
-                    def buildPathAbsolute = "${ROOT_PATH}/Build/Client/ios/${output}"
 
-                    def artifactArchive = "${buildPath}/${output}.xcarchive"
-                    def artifactIpa = "${buildPath}/${output}.ipa"
-
-                    def downloadURL = jenkinsUtils.getDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$uploadPath/$platform/$output")
-                    
-                    sh "cd \"${buildPathAbsolute}\" && zip -6 -r \"${output}.ipa.zip\" \"${output}.ipa\""
-                    sh "cd \"${buildPathAbsolute}\" && zip -6 -r \"${output}.xcarchive.zip\" \"${output}.xcarchive\""
-
-                    def buildSizeArchive = jenkinsUtils.getBuildSize("${artifactArchive}.zip")
-                    def buildSizeIpa = jenkinsUtils.getBuildSize("${artifactIpa}.zip")
-
-                    jenkinsUtils.uploadToS3("${artifactArchive}.zip", "$uploadPath/$platform/${output}.xcarchive.zip")
-                    jenkinsUtils.uploadToS3("${artifactIpa}.zip", "$uploadPath/$platform/${output}.ipa.zip")
+                    jenkinsBuilder.uploadBuild()
 
                     sh "echo \"__$platform (${output}) Build - $buildSizeIpa MB__: ${downloadURL}.ipa.zip\nXCArchive: ${downloadURL}.xcarchive.zip - $buildSizeArchive MB\" >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                 }
             }
-        }                
+        }
     }
-    
-    post
-    {
-        always
-        {
-            script
-            {
-                if (env.NOTIFY_CHAT_CHANNEL)
-                {
-                    if (env.DISCORD_WEBHOOK_URL)
-                    {
-                        discordSend description: readFile(env.CHAT_NOTIFY_DESCRIPTION_FILE), enableArtifactsList: true, footer: "------TheOneStudio-------", link: env.BUILD_URL, result: currentBuild.currentResult, showChangeset: true, thumbnail: 'https://user-images.githubusercontent.com/9598614/205434501-dc9d4c7a-caad-48de-8ec2-ca586f320f87.png', title: "$JOB_NAME - $BUILD_NUMBER", webhookURL: DISCORD_WEBHOOK_URL
-                    }
-                 
-                    if (env.SLACK_CHANNEL)
-                    {
-                        slackSend  channel: env.SLACK_CHANNEL, teamDomain: env.SLACK_DOMAIN, color: 'good', message: readFile(env.CHAT_NOTIFY_DESCRIPTION_FILE), tokenCredentialId: 'chibi-clash-income-webhook'
-                    }
-                }
+
+    post {
+        always {
+            script {
+                jenkinsBuilder.notifyToChatChannel()
+//                if (env.NOTIFY_CHAT_CHANNEL) {
+//                    if (env.DISCORD_WEBHOOK_URL) {
+//                        discordSend description: readFile(env.CHAT_NOTIFY_DESCRIPTION_FILE), enableArtifactsList: true, footer: "------TheOneStudio-------", link: env.BUILD_URL, result: currentBuild.currentResult, showChangeset: true, thumbnail: 'https://user-images.githubusercontent.com/9598614/205434501-dc9d4c7a-caad-48de-8ec2-ca586f320f87.png', title: "$JOB_NAME - $BUILD_NUMBER", webhookURL: DISCORD_WEBHOOK_URL
+//                    }
+//
+//                    if (env.SLACK_CHANNEL) {
+//                        slackSend channel: env.SLACK_CHANNEL, teamDomain: env.SLACK_DOMAIN, color: 'good', message: readFile(env.CHAT_NOTIFY_DESCRIPTION_FILE), tokenCredentialId: 'chibi-clash-income-webhook'
+//                    }
+//                }
             }
         }
-    }
-}
-
-void buildClient(executableFile, jenkinsUtils)
-{
-    try
-    {
-        def buildCommand = "cd \"$unityEditorPath\" && ./Unity -platforms ios -scriptingBackend ${SCRIPTING_BACKEND} -quit -batchmode -projectPath \"${UNITY_PROJECT_PATH}\" -executeMethod \"Build.BuildFromCommandLine\" -logFile \"${ROOT_PATH}/Build/Logs/Build-Client.ios.log\" -iosSigningTeamId \"${env.PARAM_SIGNING_TEAM}\" -outputPath ${executableFile} -scriptingDefineSymbols \"${env.UNITY_SCRIPTING_DEFINE_SYMBOLS}\""
-        
-        def archiveCommand = "xcodebuild -scheme Unity-iPhone -configuration Release -sdk iphoneos -workspace Unity-iPhone.xcworkspace archive -archivePath ${executableFile}.xcarchive";
-
-        def exportIpaCommand = "xcodebuild -exportArchive -archivePath ${executableFile}.xcarchive -exportOptionsPlist info.plist -exportPath ${executableFile}.ipa";
-
-        def buildPath = "${ROOT_PATH}/Build/Client/ios/${executableFile}";
-
-        if (jenkinsUtils.shouldBuildDevelopment()) 
-        {
-            buildCommand = "$buildCommand -development"
-        } 
-
-        if (env.SHOULD_OPTIMIZE_BUILD_SIZE)
-        {
-            buildCommand = "$buildCommand -optimizeSize"
-        }
-
-        if (env.PUBLISHER_NAME)
-        {
-            buildCommand = "$buildCommand -keyStoreFileName ${GetKeyStoreFileName()}"
-        }
-
-        //DO BUILD
-        sh buildCommand
-        
-        if (fileExists("${buildPath}/Podfile") && !fileExists("${buildPath}/Unity-iPhone.xcworkspace"))  
-        {
-            sh "cd \"${buildPath}\" && pod intall --allow-root"
-        }
-
-        echo "cd \"${buildPath}\" && ${archiveCommand}"
-        sh "cd \"${buildPath}\" && ${archiveCommand}"
-        echo "cd \"${buildPath}\" && ${exportIpaCommand}"
-        sh "cd \"${buildPath}\" && ${exportIpaCommand}"
-
-        if (!fileExists("${buildPath}/${executableFile}.ipa"))
-        {
-            error("No executable found after build")
-        }
-    }
-    catch (Exception e)
-    {
-        throw e
-    }
-    finally
-    {
-        archiveArtifacts artifacts: "Build/Logs/Build-Client.ios.log", allowEmptyArchive: true
-        archiveArtifacts artifacts: "Build/Logs/Build-Client-Report.ios.log", allowEmptyArchive: true
     }
 }

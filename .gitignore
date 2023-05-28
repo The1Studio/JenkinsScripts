@@ -1,0 +1,6 @@
+# ignore idea project files
+.idea/
+*.iml
+
+# ignore groovy libs
+lib/
