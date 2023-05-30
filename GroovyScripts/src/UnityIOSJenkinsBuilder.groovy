@@ -1,6 +1,6 @@
 import settings.UnityIOSSettings
 
-class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, UnityIOSSettings> {
+class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSJenkinsBuilder, UnityIOSSettings> {
 
     protected String uploadIpaUrl
     protected String uploadArchiveUrl
@@ -19,6 +19,8 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
         if (this.settings.uploadDomain == null || this.settings.uploadDomain.isBlank()) {
             this.settings.uploadDomain = this.jenkinsUtils.defaultValues['s3-settings']['domain']
         }
+
+        this.settings.platform = 'ios'
 
         return this
     }
@@ -127,21 +129,7 @@ class UnityIOSJenkinsBuilder extends BaseJenkinsBuilder<UnityIOSJenkinsBuilder, 
     @Override
     void notifyToGithub() throws Exception {}
 
-    String getLogPath(Closure closure) {
-        return "${this.settings.rootPathAbsolute}/Build/Logs/${closure(this)}"
-    }
-
     String getBuildPathRelative(Closure closure) {
-        return "Build/Client/ios/${this.settings.buildName}/${closure(this)}"
-    }
-
-    String getUploadUrl(Closure closure, boolean stripDomain = true) {
-        String url = "jobs/${this.settings.jobName}/${this.settings.buildNumber}/Build/Client/${this.settings.platform}/${closure(this)}"
-
-        if (stripDomain) {
-            return url
-        }
-
-        return "${this.settings.uploadDomain}/${url}"
+        return "Build/Client/${this.settings.platform}/${this.settings.buildName}/${closure(this)}"
     }
 }

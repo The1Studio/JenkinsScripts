@@ -25,4 +25,12 @@ class JenkinsUtils {
         }
         return Long.parseLong(this.ws.powershell(returnStdout: true, script: "Write-Host((Get-Item $path).length)").trim() as String) / (1024 * 1024)
     }
+
+    def runCommand(String script, boolean returnStdout = false, String encoding = 'UTF-8', String label = '', boolean returnStatus = false) {
+        if (this.ws.isUnix()) {
+            return this.ws.sh(script: script, encoding: encoding, label: label, returnStatus: returnStatus, returnStdout: returnStdout)
+        } else {
+            return this.ws.bat(script: script, encoding: encoding, label: label, returnStatus: returnStatus, returnStdout: returnStdout)
+        }
+    }
 }

@@ -1,10 +1,10 @@
-abstract class BaseJenkinsBuilder<TThis extends BaseJenkinsBuilder, TBuildSetting> {
+abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSetting> {
 
     protected TBuildSetting settings
     protected def ws
     protected JenkinsUtils jenkinsUtils
 
-    BaseJenkinsBuilder(def ws) {
+    UnityJenkinsBuilder(def ws) {
         this.ws = ws
     }
 
@@ -25,4 +25,18 @@ abstract class BaseJenkinsBuilder<TThis extends BaseJenkinsBuilder, TBuildSettin
     abstract void notifyToChatChannel() throws Exception
 
     abstract void notifyToGithub() throws Exception
+
+    String getLogPath(Closure closure) {
+        return "${this.settings.rootPathAbsolute}/Build/Logs/${closure(this)}"
+    }
+
+    String getUploadUrl(Closure closure, boolean stripDomain = true) {
+        String url = "jobs/${this.settings.jobName}/${this.settings.buildNumber}/Build/Client/${settings.platform}/${closure(this)}"
+
+        if (stripDomain) {
+            return url
+        }
+
+        return "${this.settings.uploadDomain}/${url}"
+    }
 }
