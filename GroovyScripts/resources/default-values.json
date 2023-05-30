@@ -1,0 +1,8 @@
+{
+    "s3-settings": {
+        "bucket": "the1studio-builds",
+        "region": "ap-southeast-1",
+        "credentials": "the1-s3-credential",
+        "domain": "https://the1studio-builds.s3.ap-southeast-1.amazonaws.com"
+    }
+}
