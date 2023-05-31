@@ -3,7 +3,7 @@
 def jenkinsBuilder = new UnityWebGLJenkinsBuilder(this)
 
 pipeline {
-    agent { label "macos" }
+    agent any
 
     stages {
         stage('Create Builder') {
