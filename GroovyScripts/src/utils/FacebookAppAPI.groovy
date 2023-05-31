@@ -1,3 +1,5 @@
+package utils
+
 class FacebookAppAPI {
     private JenkinsUtils jenkinsUtils
 
@@ -10,7 +12,11 @@ class FacebookAppAPI {
 
         this.appId = appId
         this.appSecret = appSecret
+    }
+
+    FacebookAppAPI loadAccessToken() {
         this.accessToken = this.getAccessToken()
+        return this
     }
 
     String getAccessToken(String appId, String appSecret) {

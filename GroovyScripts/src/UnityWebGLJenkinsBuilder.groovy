@@ -1,4 +1,5 @@
 import settings.UnityWebGLSettings
+import utils.FacebookAppAPI
 
 class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuilder, UnityWebGLSettings> {
 
@@ -28,6 +29,9 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
 
     @Override
     void build() throws Exception {
+        // Replace settings before build
+        this.replaceFacebookAppConfigJson()
+
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
             def command = ["./Unity -batchmode -quit -executeMethod Build.BuildFromCommandLine",
@@ -81,7 +85,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
         String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built failed!!!"
 
         if (this.ws.currentBuild.currentResult) {
-            message = """
+            message = """\
                 __version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built successfully !!!__
                 ${this.settings.platform} (${this.settings.jobName}) Build
                 Access URL: ${this.accessUrl}
@@ -112,11 +116,22 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
             return
         }
 
-        FacebookAppAPI facebookAppAPI = new FacebookAppAPI(this.jenkinsUtils, appId, appSecret)
-        facebookAppAPI.uploadBundleAssets(zipFile, "The One Studio WebGL Build#${this.settings.buildNumber} - Build Version ${this.settings.buildVersion}")
+        new FacebookAppAPI(this.jenkinsUtils, appId, appSecret)
+                .loadAccessToken()
+                .uploadBundleAssets(zipFile, "The One Studio WebGL Build#${this.settings.buildNumber} - Build Version ${this.settings.buildVersion}")
     }
 
     String getBuildPathRelative(Closure closure) {
         return "Build/Client/${this.settings.platform}/${this.settings.buildName}/${closure(this)}"
+    }
+
+    void replaceFacebookAppConfigJson() {
+        def variables = [
+                'ORIENTATION': this.settings.orientation,
+        ]
+
+        for (String file : this.ws.findFiles(glob: "**/Assets/**/fbapp-config.json")) {
+            this.jenkinsUtils.replaceWithJenkinsVariables(file, variables)
+        }
     }
 }

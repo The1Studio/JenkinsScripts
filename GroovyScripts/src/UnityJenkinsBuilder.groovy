@@ -1,3 +1,5 @@
+import utils.JenkinsUtils
+
 abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSetting> {
 
     protected TBuildSetting settings
@@ -14,6 +16,13 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
     }
 
     TThis importBuildSettings(def buildSetting) throws Exception {
+        this.ws.echo "Importing build settings..."
+        if (buildSetting instanceof HashMap) {
+            for (def pair : buildSetting) {
+                this.ws.echo "${pair.key} = ${pair.value}"
+            }
+        }
+
         this.settings = buildSetting as TBuildSetting
         return this as TThis
     }

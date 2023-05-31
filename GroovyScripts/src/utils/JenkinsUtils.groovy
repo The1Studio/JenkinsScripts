@@ -1,3 +1,5 @@
+package utils
+
 class JenkinsUtils {
     def ws
     def defaultValues
@@ -32,5 +34,15 @@ class JenkinsUtils {
         } else {
             return this.ws.bat(script: script, encoding: encoding, label: label, returnStatus: returnStatus, returnStdout: returnStdout)
         }
+    }
+
+    void replaceInFile(String file, String regex, Closure closure) {
+        String content = this.ws.readFile(file)
+        content = content.replaceAll(regex, closure)
+        this.ws.writeFile(file, content)
+    }
+
+    void replaceWithJenkinsVariables(String file, HashMap<String, String> variables, boolean useEnv = true) {
+        this.replaceInFile(file, /\$\{JENKINS_(.+?)\}/) { String match, String group -> return variables[group] ?: useEnv ? env[group] : match }
     }
 }

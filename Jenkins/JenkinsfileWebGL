@@ -31,12 +31,14 @@ pipeline {
                                                   isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true',
                                                   isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true',
                                                   isNotifyToChatChannel      : env.PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL == 'true',
-                                                  isUploadToFacebook         : env.PARAM_SHOULD_UPLOAD_TO_FACEBOOK == 'true',])
+                                                  isUploadToFacebook         : env.PARAM_SHOULD_UPLOAD_TO_FACEBOOK == 'true',
+                                                  orientation                : env.PARAM_ORIENTATION,])
                 }
             }
         }
 
         stage("Clean and sync") {
+            when { expression { return false } }
             options { timeout(time: 1, unit: 'HOURS') }
 
             steps {
@@ -65,6 +67,7 @@ pipeline {
         }
 
         stage("Build Client (WebGL)") {
+            when { expression { return false } }
             options { timeout(time: 2, unit: 'HOURS') }
 
             steps {
