@@ -75,6 +75,22 @@ pipeline {
             }
 
             post {
+                failure {
+                    script {
+                        jenkinsBuilder.jenkinsUtils.runCommand('git clean -fd')
+                        jenkinsBuilder.jenkinsUtils.runCommand('git reset --hard')
+                        jenkinsBuilder.jenkinsUtils.runCommand('git submodule foreach --recursive git reset --hard')
+
+                        if (jenkinsBuilder.settings.buildName) {
+                            if (isUnix()) {
+                                sh "rm -rf ./Unity${jenkinsBuilder.settings.buildName}/Library/Bee/"
+                            } else {
+                                powershell script: "Remove-Item -Recurse -Force .\\Unity${jenkinsBuilder.settings.buildName}\\Library\\Bee\\"
+                            }
+                        }
+                    }
+                }
+
                 always {
                     script {
                         String logPath = jenkinsBuilder.getLogPath(false) { "Build-Client.${jenkinsBuilder.settings.platform}.log" }

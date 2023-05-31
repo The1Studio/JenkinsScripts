@@ -68,17 +68,33 @@ pipeline {
             }
 
             post {
+                failure {
+                    script {
+                        jenkinsBuilder.jenkinsUtils.runCommand('git clean -fd')
+                        jenkinsBuilder.jenkinsUtils.runCommand('git reset --hard')
+                        jenkinsBuilder.jenkinsUtils.runCommand('git submodule foreach --recursive git reset --hard')
+
+                        if (jenkinsBuilder.settings.buildName) {
+                            if (isUnix()) {
+                                sh "rm -rf ./Unity${jenkinsBuilder.settings.buildName}/Library/Bee/"
+                            } else {
+                                powershell script: "Remove-Item -Recurse -Force .\\Unity${jenkinsBuilder.settings.buildName}\\Library\\Bee\\"
+                            }
+                        }
+                    }
+                }
+
                 always {
                     script {
-                        String logPathAbsolute = jenkinsBuilder.getLogPath { "Build-Client.${jenkinsBuilder.settings.platform}.log" }
-                        String reportPathAbsolute = jenkinsBuilder.getLogPath { "Build-Client-Report.${jenkinsBuilder.settings.platform}.log" }
+                        String logPath = jenkinsBuilder.getLogPath(false) { "Build-Client.${jenkinsBuilder.settings.platform}.log" }
+                        String reportPath = jenkinsBuilder.getLogPath(false) { "Build-Client-Report.${jenkinsBuilder.settings.platform}.log" }
 
-                        if (fileExists(logPathAbsolute)) {
-                            archiveArtifacts artifacts: logPathAbsolute, allowEmptyArchive: true
+                        if (fileExists(logPath)) {
+                            archiveArtifacts artifacts: logPath, allowEmptyArchive: true
                         }
 
-                        if (fileExists(reportPathAbsolute)) {
-                            archiveArtifacts artifacts: reportPathAbsolute, allowEmptyArchive: true
+                        if (fileExists(reportPath)) {
+                            archiveArtifacts artifacts: reportPath, allowEmptyArchive: true
                         }
                     }
                 }
