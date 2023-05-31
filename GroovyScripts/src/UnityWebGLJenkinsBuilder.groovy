@@ -24,14 +24,14 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
             this.settings.isUploadToFacebook = this.settings.facebookAppId != null && !this.settings.facebookAppId.isBlank() && this.settings.facebookAppSecret != null && !this.settings.facebookAppSecret.isBlank()
         }
 
+        // Replace settings before build
+        this.replaceFacebookAppConfigJson()
+
         return this
     }
 
     @Override
     void build() throws Exception {
-        // Replace settings before build
-        this.replaceFacebookAppConfigJson()
-
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
             def command = ["./Unity -batchmode -quit -executeMethod Build.BuildFromCommandLine",
@@ -126,12 +126,10 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
     }
 
     void replaceFacebookAppConfigJson() {
-        def variables = [
-                'ORIENTATION': this.settings.orientation,
-        ]
+        def variables = ['ORIENTATION': this.settings.orientation,]
 
-        for (String file : this.ws.findFiles(glob: "**/Assets/**/fbapp-config.json")) {
-            this.jenkinsUtils.replaceWithJenkinsVariables(file, variables)
+        for (def file : this.ws.findFiles(glob: "**/Assets/**/fbapp-config.json")) {
+            this.jenkinsUtils.replaceWithJenkinsVariables(file.path as String, variables)
         }
     }
 }

@@ -38,7 +38,6 @@ pipeline {
         }
 
         stage("Clean and sync") {
-            when { expression { return false } }
             options { timeout(time: 1, unit: 'HOURS') }
 
             steps {
@@ -67,7 +66,6 @@ pipeline {
         }
 
         stage("Build Client (WebGL)") {
-            when { expression { return false } }
             options { timeout(time: 2, unit: 'HOURS') }
 
             steps {

@@ -37,12 +37,18 @@ class JenkinsUtils {
     }
 
     void replaceInFile(String file, String regex, Closure closure) {
-        String content = this.ws.readFile(file)
+        String content = this.ws.readFile file: file
+        this.ws.echo "Before: $content"
         content = content.replaceAll(regex, closure)
-        this.ws.writeFile(file, content)
+        this.ws.echo "After: $content"
+        this.ws.writeFile file: file, text: content
     }
 
     void replaceWithJenkinsVariables(String file, HashMap<String, String> variables, boolean useEnv = true) {
-        this.replaceInFile(file, /\$\{JENKINS_(.+?)\}/) { String match, String group -> return variables[group] ?: useEnv ? env[group] : match }
+        this.replaceInFile(file, /\$\{JENKINS_(.+?)\}/) {
+            String match = it[0]
+            String group = it[1]
+            return variables[group] ?: useEnv ? this.ws.env[group] : match
+        }
     }
 }
