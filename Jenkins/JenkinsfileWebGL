@@ -1,0 +1,113 @@
+@Library('jenkins-helper') _
+
+def jenkinsBuilder = new UnityWebGLJenkinsBuilder(this)
+
+pipeline {
+    agent { label "macos" }
+
+    stages {
+        stage('Create Builder') {
+            steps {
+                script {
+                    jenkinsBuilder
+                            .loadResource()
+                            .importBuildSettings([jobName                    : env.JOB_NAME,
+                                                  buildName                  : env.PARAM_BUILD_FILE_NAME,
+                                                  buildNumber                : env.BUILD_NUMBER,
+                                                  buildVersion               : env.BUILD_VERSION,
+                                                  platform                   : 'webgl',
+                                                  scriptingBackend           : 'il2cpp',
+                                                  unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS,
+                                                  unityIdEmail               : credentials('jenkins-id-for-unity-email'),
+                                                  unityIdPassword            : credentials('jenkins-id-for-unity-password'),
+                                                  unityIdLicense             : credentials('jenkins-id-for-unity-license'),
+                                                  uploadDomain               : env.PARAM_BUILD_DOWNLOAD_URL,
+                                                  discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL,
+                                                  rootPathAbsolute           : pwd(),
+                                                  unityProjectPathAbsolute   : "${pwd()}/Unity${env.PARAM_BUILD_FILE_NAME}",
+                                                  unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME),
+                                                  facebookAppId              : env.PARAM_FACEBOOK_APP_ID,
+                                                  facebookAppSecret          : env.PARAM_FACEBOOK_APP_SECRET,
+                                                  isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true',
+                                                  isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true',
+                                                  isNotifyToChatChannel      : env.PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL == 'true',
+                                                  isUploadToFacebook         : env.PARAM_SHOULD_UPLOAD_TO_FACEBOOK == 'true',
+                                                  orientation                : env.PARAM_ORIENTATION,])
+                }
+            }
+        }
+
+        stage("Clean and sync") {
+            options { timeout(time: 1, unit: 'HOURS') }
+
+            steps {
+                script {
+                    echo "---- Start cleaning ----"
+                    sh "git clean -fd"
+                    sh "git reset --hard"
+                    sh "git submodule foreach --recursive git clean -fd"
+                    sh "git submodule foreach --recursive git reset --hard"
+                    sh "rm -rf ./Build/"
+                    echo "---- End cleaning   ----"
+
+                    echo "---- Update submodule ----"
+                    sh "git submodule update --init"
+                    sh "git submodule update"
+                    echo "---- End Update submodule ----"
+
+                    // set build version and other info
+                    if (isUnix()) {
+                        sh "JenkinsScripts/BashScripts/set-game-version.sh '${env.BUILD_VERSION}' '${env.BUILD_NUMBER}' '${env.GIT_COMMIT}' '${env.PARAM_BUILD_FILE_NAME}'"
+                    } else {
+                        powershell "JenkinsScripts\\Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${env.PARAM_BUILD_FILE_NAME}"
+                    }
+                }
+            }
+        }
+
+        stage("Build Client (WebGL)") {
+            options { timeout(time: 2, unit: 'HOURS') }
+
+            steps {
+                script {
+                    jenkinsBuilder.build()
+                }
+            }
+
+            post {
+                always {
+                    script {
+                        String logPathAbsolute = jenkinsBuilder.getLogPath { "Build-Client.${jenkinsBuilder.settings.platform}.log" }
+                        String reportPathAbsolute = jenkinsBuilder.getLogPath { "Build-Client-Report.${jenkinsBuilder.settings.platform}.log" }
+
+                        if (fileExists(logPathAbsolute)) {
+                            archiveArtifacts artifacts: logPathAbsolute, allowEmptyArchive: true
+                        }
+
+                        if (fileExists(reportPathAbsolute)) {
+                            archiveArtifacts artifacts: reportPathAbsolute, allowEmptyArchive: true
+                        }
+                    }
+                }
+            }
+        }
+
+        stage("Upload Build") {
+            options { timeout(time: 75, unit: 'MINUTES') }
+
+            steps {
+                script {
+                    jenkinsBuilder.uploadBuild()
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                jenkinsBuilder.notifyToChatChannel()
+            }
+        }
+    }
+}
