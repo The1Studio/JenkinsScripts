@@ -35,8 +35,14 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
 
     abstract void notifyToGithub() throws Exception
 
-    String getLogPath(Closure closure) {
-        return "${this.settings.rootPathAbsolute}/Build/Logs/${closure(this)}"
+    String getLogPath(boolean absolute = true, Closure closure) {
+        String relative = "Build/Logs/${closure(this)}"
+
+        if (absolute) {
+            return "${this.settings.rootPathAbsolute}/${relative}"
+        }
+
+        return relative
     }
 
     String getUploadUrl(Closure closure, boolean stripDomain = true) {

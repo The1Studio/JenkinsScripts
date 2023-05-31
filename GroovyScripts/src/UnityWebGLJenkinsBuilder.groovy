@@ -52,6 +52,10 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
 
             this.ws.sh command
         }
+
+        if (!this.ws.fileExists(this.getBuildPathRelative { 'index.html' })) {
+            this.ws.error("No executable found after build")
+        }
     }
 
     @Override
