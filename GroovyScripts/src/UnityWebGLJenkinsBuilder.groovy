@@ -88,7 +88,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
 
         String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built failed!!!"
 
-        if (this.ws.currentBuild.currentResult) {
+        if (this.jenkinsUtils.isCurrentBuildSuccess()) {
             message = """\
                 __version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built successfully !!!__
                 ${this.settings.platform} (${this.settings.jobName}) Build

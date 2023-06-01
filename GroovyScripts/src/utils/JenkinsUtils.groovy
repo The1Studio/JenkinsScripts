@@ -51,4 +51,25 @@ class JenkinsUtils {
             return variables[group] ?: useEnv ? this.ws.env[group] : match
         }
     }
+
+    BuildResults getCurrentBuildResult() {
+        try {
+            return BuildResults.valueOf(this.ws.currentBuild.currentResult.toString())
+        } catch (Exception ignored) {
+            return BuildResults.UNKNOWN
+        }
+    }
+
+    Boolean isCurrentBuildSuccess() {
+        return this.getCurrentBuildResult() == BuildResults.SUCCESS
+    }
+
+    enum BuildResults {
+        SUCCESS,
+        FAILURE,
+        ABORTED,
+        UNSTABLE,
+        NOT_BUILT,
+        UNKNOWN
+    }
 }
