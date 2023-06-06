@@ -498,6 +498,7 @@ void BuildClient(executableFile)
 {
     try
     {
+        def setSymbolCommand = "cd /D \"$unityEditorPath\" && Unity.exe -quit -batchmode -projectPath \"${workspace}\\Unity$BUILD_FILE_NAME\" -executeMethod \"Build.SetScriptingDefineSymbols\" -logFile \"${workspace}\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" -scriptingDefineSymbols ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS} -platforms ${CLIENT_PLATFORM}"
         def buildCommand = "cd /D \"$unityEditorPath\" && Unity.exe -platforms ${CLIENT_PLATFORM} -scriptingBackend ${SCRIPTING_BACKEND} -quit -batchmode -projectPath \"${workspace}\\Unity$BUILD_FILE_NAME\" -executeMethod \"Build.BuildFromCommandLine\" -logFile \"${workspace}\\Build\\Logs\\Build-Client.${CLIENT_PLATFORM}.log\" -outputPath ${executableFile} -scriptingDefineSymbols ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS}"
         
         getLicenseCommand = "cd /D \"$unityEditorPath\" && Unity.exe -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit";
@@ -544,6 +545,7 @@ void BuildClient(executableFile)
         }
         
         //DO BUILD
+        bat setSymbolCommand
         bat buildCommand
                 
 //         if (env.NODE_NAME != "tuha-personal-pc")
