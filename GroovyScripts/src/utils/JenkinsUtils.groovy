@@ -23,7 +23,7 @@ class JenkinsUtils {
 
     long fileSizeInMB(String path) {
         if (this.ws.isUnix()) {
-            return Long.parseLong(this.ws.sh(returnStdout: true, script: "du -k $path | awk '{print \$1}'").trim() as String) / 1024
+            return Long.parseLong(this.ws.sh(returnStdout: true, script: "du -sh -m $path | awk '{print \$1}'").trim() as String)
         }
         return Long.parseLong(this.ws.powershell(returnStdout: true, script: "Write-Host((Get-Item $path).length)").trim() as String) / (1024 * 1024)
     }
@@ -31,9 +31,8 @@ class JenkinsUtils {
     def runCommand(String script, boolean returnStdout = false, String encoding = 'UTF-8', String label = '', boolean returnStatus = false) {
         if (this.ws.isUnix()) {
             return this.ws.sh(script: script, encoding: encoding, label: label, returnStatus: returnStatus, returnStdout: returnStdout)
-        } else {
-            return this.ws.bat(script: script, encoding: encoding, label: label, returnStatus: returnStatus, returnStdout: returnStdout)
         }
+        return this.ws.bat(script: script, encoding: encoding, label: label, returnStatus: returnStatus, returnStdout: returnStdout)
     }
 
     void replaceInFile(String file, String regex, Closure closure) {

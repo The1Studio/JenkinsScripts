@@ -6,6 +6,9 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
     private String accessUrl
     private String accessZipUrl
 
+    private long folderSize
+    private long zipSize
+
     UnityWebGLJenkinsBuilder(Object workflowScript) {
         super(workflowScript)
     }
@@ -34,23 +37,32 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
     void build() throws Exception {
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
-            def command = ["./Unity -batchmode -quit -executeMethod Build.BuildFromCommandLine",
-                           "-platforms ${this.settings.platform}",
-                           "-scriptingBackend ${this.settings.scriptingBackend}",
-                           "-projectPath '${this.settings.unityProjectPathAbsolute}'",
-                           "-logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}'",
-                           "-outputPath '${this.settings.buildName}'",
-                           "-scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}'",].join(' ')
+            def setScriptingDefineSymbolsCommand = [this.ws.isUnix() ? "./Unity" : "./Unity.exe",
+                                                    " -batchmode -quit -executeMethod Build.SetScriptingDefineSymbols",
+                                                    "-platforms ${this.settings.platform}",
+                                                    "-projectPath '${this.settings.unityProjectPathAbsolute}'",
+                                                    "-logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}'",
+                                                    "-scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}'",].join(' ')
+
+            def buildCommand = [this.ws.isUnix() ? "./Unity" : "./Unity.exe",
+                                " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
+                                "-platforms ${this.settings.platform}",
+                                "-scriptingBackend ${this.settings.scriptingBackend}",
+                                "-projectPath '${this.settings.unityProjectPathAbsolute}'",
+                                "-logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}'",
+                                "-outputPath '${this.settings.buildName}'",
+                                "-scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}'",].join(' ')
 
             if (this.settings.isBuildDevelopment) {
-                command += ' -development'
+                buildCommand += ' -development'
             }
 
             if (this.settings.isOptimizeBuildSize) {
-                command += ' -optimizeSize'
+                buildCommand += ' -optimizeSize'
             }
 
-            this.ws.sh command
+            this.jenkinsUtils.runCommand(setScriptingDefineSymbolsCommand)
+            this.jenkinsUtils.runCommand(buildCommand)
         }
 
         if (!this.ws.fileExists(this.getBuildPathRelative { 'index.html' })) {
@@ -65,6 +77,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
             this.accessUrl = "${this.settings.uploadDomain}/${uploadUrl}/index.html"
 
             this.jenkinsUtils.uploadToS3('', uploadUrl)
+            this.folderSize = this.jenkinsUtils.fileSizeInMB('.')
 
             if (this.settings.isUploadToFacebook) {
                 String zipFile = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.zip"
@@ -74,8 +87,9 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
                 this.ws.zip dir: '', zipFile: zipFile
 
                 this.jenkinsUtils.uploadToS3(zipFile, uploadZipUrl)
-
                 this.uploadBuildToFacebook(zipFile)
+
+                this.zipSize = this.jenkinsUtils.fileSizeInMB(zipFile)
             }
         }
     }
@@ -92,8 +106,8 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
             message = """\
                 __version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built successfully !!!__
                 ${this.settings.platform} (${this.settings.jobName}) Build
-                Access URL: ${this.accessUrl}
-                ${this.settings.isUploadToFacebook ? "Access Zip URL: ${this.accessZipUrl}" : "This build is not uploaded to Facebook"}
+                Access URL: ${this.accessUrl} - ${this.folderSize}MB
+                ${this.settings.isUploadToFacebook ? "Access Zip URL: ${this.accessZipUrl} - ${this.zipSize}MB" : "This build is not uploaded to Facebook"}
             """.stripMargin()
         }
 
