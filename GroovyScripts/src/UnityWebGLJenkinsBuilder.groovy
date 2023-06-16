@@ -8,6 +8,9 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
 
     private long folderSize
     private long zipSize
+    private long wasmSize
+    private long dataSize
+    private long streamingAssetsSize
 
     UnityWebGLJenkinsBuilder(Object workflowScript) {
         super(workflowScript)
@@ -79,6 +82,18 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
             this.jenkinsUtils.uploadToS3('', uploadUrl)
             this.folderSize = this.jenkinsUtils.fileSizeInMB('.')
 
+            if (this.ws.fileExists("Build/${this.settings.buildName}.data")) {
+                this.dataSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.data")
+            }
+
+            if (this.ws.fileExists("Build/${this.settings.buildName}.wasm")) {
+                this.wasmSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.wasm")
+            }
+
+            if (this.ws.fileExists("Build/${this.settings.buildName}_Data")) {
+                this.streamingAssetsSize = this.jenkinsUtils.fileSizeInMB("StreamingAssets")
+            }
+
             if (this.settings.isUploadToFacebook) {
                 String zipFile = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.zip"
                 String uploadZipUrl = this.getUploadUrl({ zipFile })
@@ -108,6 +123,10 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
                 ${this.settings.platform} (${this.settings.jobName}) Build
                 Access URL: ${this.accessUrl} - ${this.folderSize}MB
                 ${this.settings.isUploadToFacebook ? "Access Zip URL: ${this.accessZipUrl} - ${this.zipSize}MB" : "This build is not uploaded to Facebook"}
+                -----------------------------------------------------------
+                Data: ${this.dataSize ? "${this.dataSize}MB" : "N/A"}
+                WASM: ${this.wasmSize ? "${this.wasmSize}MB" : "N/A"}
+                Streaming Assets: ${this.streamingAssetsSize ? "${this.streamingAssetsSize}MB" : "N/A"}
             """.stripMargin()
         }
 
