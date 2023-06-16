@@ -90,7 +90,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
                 this.wasmSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.wasm")
             }
 
-            if (this.ws.fileExists("Build/${this.settings.buildName}_Data")) {
+            if (this.ws.fileExists("StreamingAssets")) {
                 this.streamingAssetsSize = this.jenkinsUtils.fileSizeInMB("StreamingAssets")
             }
 
