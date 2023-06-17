@@ -267,6 +267,8 @@ pipeline
                             bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                             bat "echo __packageName: ${env.PACKAGE_NAME}__ >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                         }
+                        
+                        bat "echo Scripting define symbols: ${env.UNITY_SCRIPTING_DEFINE_SYMBOLS} >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                     }
                 }
             }
