@@ -56,7 +56,7 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
         if (this.ws.isUnix()) {
             this.ws.sh "JenkinsScripts/BashScripts/set-game-version.sh '${env.BUILD_VERSION}' '${env.BUILD_NUMBER}' '${env.GIT_COMMIT}' '${env.PARAM_BUILD_FILE_NAME}'"
         } else {
-            this.ws.powershell "JenkinsScripts\\Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${BUILD_FILE_NAME}"
+            this.ws.powershell "JenkinsScripts\\Scripts\\SetGameVersion.ps1 -BuildVersion ${env.BUILD_VERSION} -BuildNumber ${env.BUILD_NUMBER} -CommitHash ${env.GIT_COMMIT} -ProjectName ${env.PARAM_BUILD_FILE_NAME}"
         }
 
         this.ws.echo "---- End cleaning ----"
