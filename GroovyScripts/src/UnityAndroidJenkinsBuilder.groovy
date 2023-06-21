@@ -24,7 +24,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidJenkins
     void build() throws Exception {
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
-            def buildCommand = [this.ws.isUnix() ? "./Unity" : "./Unity.exe",
+            def buildCommand = [this.ws.isUnix() ? "./Unity" : ".\\Unity.exe",
                                 " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
                                 "-platforms ${this.settings.platform}",
                                 "-scriptingBackend ${this.settings.scriptingBackend}",
@@ -43,7 +43,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidJenkins
 
             if (this.settings.isBuildAppBundle) {
                 this.ws.runCommand(
-                        "${this.ws.isUnix() ? './Unity' : './Unity.exe'} -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit"
+                        "${this.ws.isUnix() ? './Unity' : '.\\Unity.exe'} -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit"
                 )
                 buildCommand += ' -buildAppBundle'
                 buildCommand += " -keyStoreFileName '${this.settings.keystoreName}'"

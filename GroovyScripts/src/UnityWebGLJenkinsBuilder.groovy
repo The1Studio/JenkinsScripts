@@ -36,14 +36,14 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
 
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
-            def setScriptingDefineSymbolsCommand = [this.ws.isUnix() ? "./Unity" : "./Unity.exe",
-                                                    " -batchmode -quit -executeMethod Build.SetScriptingDefineSymbols",
-                                                    "-platforms ${this.settings.platform}",
-                                                    "-projectPath '${this.settings.unityProjectPathAbsolute}'",
-                                                    "-logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}'",
-                                                    "-scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}'",].join(' ')
+//            def setScriptingDefineSymbolsCommand = [this.ws.isUnix() ? "./Unity" : ".\\Unity.exe",
+//                                                    " -batchmode -quit -executeMethod Build.SetScriptingDefineSymbols",
+//                                                    "-platforms ${this.settings.platform}",
+//                                                    "-projectPath '${this.settings.unityProjectPathAbsolute}'",
+//                                                    "-logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}'",
+//                                                    "-scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}'",].join(' ')
 
-            def buildCommand = [this.ws.isUnix() ? "./Unity" : "./Unity.exe",
+            def buildCommand = [this.ws.isUnix() ? "./Unity" : ".\\Unity.exe",
                                 " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
                                 "-platforms ${this.settings.platform}",
                                 "-scriptingBackend ${this.settings.scriptingBackend}",
@@ -60,7 +60,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
                 buildCommand += ' -optimizeSize'
             }
 
-            this.jenkinsUtils.runCommand(setScriptingDefineSymbolsCommand)
+//            this.jenkinsUtils.runCommand(setScriptingDefineSymbolsCommand)
             this.jenkinsUtils.runCommand(buildCommand)
         }
 
