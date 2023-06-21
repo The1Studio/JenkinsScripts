@@ -16,10 +16,6 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSJenkinsBuilder,
     UnityIOSJenkinsBuilder importBuildSettings(Object buildSetting) throws Exception {
         super.importBuildSettings(buildSetting)
 
-        if (this.settings.uploadDomain == null || this.settings.uploadDomain.isBlank()) {
-            this.settings.uploadDomain = this.jenkinsUtils.defaultValues['s3-settings']['domain']
-        }
-
         this.settings.platform = 'ios'
 
         return this

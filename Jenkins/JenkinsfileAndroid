@@ -1,9 +1,9 @@
 @Library('jenkins-helper') _
 
-def jenkinsBuilder = new UnityIOSJenkinsBuilder(this)
+def jenkinsBuilder = new UnityAndroidJenkinsBuilder(this)
 
 pipeline {
-    agent { label "macos" }
+    agent any
 
     stages {
         stage('Create Builder') {
@@ -15,8 +15,8 @@ pipeline {
                                                   buildName                  : env.PARAM_BUILD_FILE_NAME,
                                                   buildNumber                : env.BUILD_NUMBER,
                                                   buildVersion               : env.BUILD_VERSION,
-                                                  platform                   : 'ios',
-                                                  scriptingBackend           : 'il2cpp',
+                                                  platform                   : 'android',
+                                                  scriptingBackend           : env.PARAM_UNITY_SCRIPTING_BACKEND,
                                                   unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS,
                                                   unityIdEmail               : credentials('jenkins-id-for-unity-email'),
                                                   unityIdPassword            : credentials('jenkins-id-for-unity-password'),
@@ -29,7 +29,11 @@ pipeline {
                                                   isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true',
                                                   isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true',
                                                   isNotifyToChatChannel      : env.PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL == 'true',
-                                                  signingTeamId              : env.PARAM_SIGNING_TEAM_ID,])
+                                                  keystoreName               : env.PARAM_KEYSTORE_NAME,
+                                                  keystorePass               : env.PARAM_KEYSTORE_PASSWORD,
+                                                  keystoreAliasName          : env.PARAM_KEYSTORE_ALIAS_NAME,
+                                                  keystoreAliasPass          : env.PARAM_KEYSTORE_ALIAS_PASSWORD,
+                                                  isBuildAppBundle           : env.PARAM_SHOULD_BUILD_APP_BUNDLE == 'true',])
                 }
             }
         }
@@ -44,7 +48,7 @@ pipeline {
             }
         }
 
-        stage("Build Client (IOS)") {
+        stage("Build Client (Android)") {
             options { timeout(time: 2, unit: 'HOURS') }
 
             steps {
@@ -64,7 +68,7 @@ pipeline {
                             if (isUnix()) {
                                 sh "rm -rf ./Unity${jenkinsBuilder.settings.buildName}/Library/Bee/"
                             } else {
-                                powershell script: "Remove-Item -Recurse -Force .\\Unity${jenkinsBuilder.settings.buildName}\\Library\\Bee\\"
+                                powershell "Remove-Item -Recurse -Force .\\Unity${jenkinsBuilder.settings.buildName}\\Library\\Bee\\"
                             }
                         }
                     }

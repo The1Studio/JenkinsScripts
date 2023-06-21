@@ -20,24 +20,20 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
     UnityWebGLJenkinsBuilder importBuildSettings(Object buildSetting) throws Exception {
         super.importBuildSettings(buildSetting)
 
-        if (this.settings.uploadDomain == null || this.settings.uploadDomain.isBlank()) {
-            this.settings.uploadDomain = this.jenkinsUtils.defaultValues['s3-settings']['domain']
-        }
-
         this.settings.platform = 'webgl'
 
         if (this.settings.isUploadToFacebook) {
             this.settings.isUploadToFacebook = this.settings.facebookAppId != null && !this.settings.facebookAppId.isBlank() && this.settings.facebookAppSecret != null && !this.settings.facebookAppSecret.isBlank()
         }
 
-        // Replace settings before build
-        this.replaceFacebookAppConfigJson()
-
         return this
     }
 
     @Override
     void build() throws Exception {
+        // Replace settings before build
+        this.replaceFacebookAppConfigJson()
+
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
             def setScriptingDefineSymbolsCommand = [this.ws.isUnix() ? "./Unity" : "./Unity.exe",
