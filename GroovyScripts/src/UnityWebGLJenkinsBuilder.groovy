@@ -124,7 +124,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
                 WASM: ${this.wasmSize ? "${this.wasmSize}MB" : "N/A"}
                 Streaming Assets: ${this.streamingAssetsSize ? "${this.streamingAssetsSize}MB" : "N/A"}
                 -----------------------------------------------------------
-                Define Symbols: \n```${this.getDefineSymbols().join('\n')}```
+                Define Symbols: \n```\n${this.getDefineSymbols().join('\n')}\n```
             """.stripMargin()
         }
 
