@@ -89,4 +89,8 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
 
         return "${this.settings.uploadDomain}/${url}"
     }
+
+    String[] getDefineSymbols() {
+        return (this.settings.unityScriptingDefineSymbols as String).split(';')
+    }
 }
