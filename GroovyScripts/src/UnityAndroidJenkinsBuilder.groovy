@@ -16,6 +16,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidJenkins
         super.importBuildSettings(buildSetting)
 
         this.settings.platform = 'android'
+        this.settings.scriptingBackend ?= 'il2cpp'
 
         return this
     }
