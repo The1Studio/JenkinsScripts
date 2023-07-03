@@ -24,7 +24,7 @@ pipeline {
                                                   uploadDomain               : env.PARAM_BUILD_DOWNLOAD_URL,
                                                   discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL,
                                                   rootPathAbsolute           : pwd(),
-                                                  unityProjectPathAbsolute   : "${pwd()}/Unity${env.PARAM_BUILD_FILE_NAME}",
+                                                  unityProjectPathAbsolute   : "${pwd()}${isUnix() ? '/' : '\\'}Unity${env.PARAM_BUILD_FILE_NAME}",
                                                   unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME),
                                                   isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true',
                                                   isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true',
