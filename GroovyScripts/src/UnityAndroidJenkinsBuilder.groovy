@@ -29,10 +29,10 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidJenkins
                                 " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
                                 "-platforms ${this.settings.platform}",
                                 "-scriptingBackend ${this.settings.scriptingBackend}",
-                                "-projectPath '${this.settings.unityProjectPathAbsolute}'",
-                                "-logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}'",
-                                "-outputPath '${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}'",
-                                "-scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}'",].join(' ')
+                                "-projectPath \"${this.settings.unityProjectPathAbsolute}\"",
+                                "-logFile \"${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}\"",
+                                "-outputPath \"${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}\"",
+                                "-scriptingDefineSymbols \"${this.settings.unityScriptingDefineSymbols}\"",].join(' ')
 
             if (this.settings.isBuildDevelopment) {
                 buildCommand += ' -development'
@@ -47,10 +47,10 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidJenkins
 //                        "${this.ws.isUnix() ? './Unity' : '.\\Unity.exe'} -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit"
 //                )
                 buildCommand += ' -buildAppBundle'
-                buildCommand += " -keyStoreFileName '${this.settings.keystoreName}'"
-                buildCommand += " -keyStorePassword '${this.settings.keystorePass}'"
-                buildCommand += " -keyStoreAliasName '${this.settings.keystoreAliasName}'"
-                buildCommand += " -keyStoreAliasPassword '${this.settings.keystoreAliasPass}'"
+                buildCommand += " -keyStoreFileName \"${this.settings.keystoreName}\""
+                buildCommand += " -keyStorePassword \"${this.settings.keystorePass}\""
+                buildCommand += " -keyStoreAliasName \"${this.settings.keystoreAliasName}\""
+                buildCommand += " -keyStoreAliasPassword \"${this.settings.keystoreAliasPass}\""
             }
 
             this.jenkinsUtils.runCommand(buildCommand)
