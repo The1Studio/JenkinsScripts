@@ -42,9 +42,9 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidJenkins
             }
 
             if (this.settings.isBuildAppBundle) {
-                this.jenkinsUtils.runCommand(
-                        "${this.ws.isUnix() ? './Unity' : '.\\Unity.exe'} -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit"
-                )
+//                this.jenkinsUtils.runCommand(
+//                        "${this.ws.isUnix() ? './Unity' : '.\\Unity.exe'} -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit"
+//                )
                 buildCommand += ' -buildAppBundle'
                 buildCommand += " -keyStoreFileName '${this.settings.keystoreName}'"
                 buildCommand += " -keyStorePassword '${this.settings.keystorePass}'"
