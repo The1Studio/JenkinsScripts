@@ -1,11 +1,13 @@
 package utils
 
+import java.util.concurrent.TimeUnit
+
 class JenkinsUtils {
-    def ws
+    JenkinsWS ws
     def defaultValues
 
     JenkinsUtils(def ws) {
-        this.ws = ws
+        this.ws = new JenkinsWS(ws)
     }
 
     JenkinsUtils loadResource() {
@@ -43,7 +45,7 @@ class JenkinsUtils {
         this.ws.writeFile file: file, text: content
     }
 
-    void replaceWithJenkinsVariables(String file, HashMap<String, String> variables, boolean useEnv = true) {
+    void replaceWithJenkinsVariables(String file, HashMap<String, String> variables = [], boolean useEnv = true) {
         this.replaceInFile(file, /\$\{JENKINS_(.+?)\}/) {
             String match = it[0]
             String group = it[1]
@@ -57,6 +59,10 @@ class JenkinsUtils {
         } catch (Exception ignored) {
             return BuildResults.UNKNOWN
         }
+    }
+
+    String combinePath(String... paths) {
+        return paths.join(this.ws.isUnix() ? '/' : '\\' )
     }
 
     Boolean isCurrentBuildSuccess() {

@@ -9,31 +9,9 @@ pipeline {
         stage('Create Builder') {
             steps {
                 script {
-                    jenkinsBuilder
-                            .loadResource()
-                            .importBuildSettings([jobName                    : env.JOB_NAME,
-                                                  buildName                  : env.PARAM_BUILD_FILE_NAME,
-                                                  buildNumber                : env.BUILD_NUMBER,
-                                                  buildVersion               : env.BUILD_VERSION,
-                                                  platform                   : 'android',
-                                                  scriptingBackend           : env.PARAM_UNITY_SCRIPTING_BACKEND,
-                                                  unityScriptingDefineSymbols: env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS,
-                                                  unityIdEmail               : credentials('jenkins-id-for-unity-email'),
-                                                  unityIdPassword            : credentials('jenkins-id-for-unity-password'),
-                                                  unityIdLicense             : credentials('jenkins-id-for-unity-license'),
-                                                  uploadDomain               : env.PARAM_BUILD_DOWNLOAD_URL,
-                                                  discordWebhookUrl          : env.PARAM_DISCORD_WEBHOOK_URL,
-                                                  rootPathAbsolute           : pwd(),
-                                                  unityProjectPathAbsolute   : "${pwd()}${isUnix() ? '/' : '\\'}Unity${env.PARAM_BUILD_FILE_NAME}",
-                                                  unityBinaryPathAbsolute    : tool(name: env.PARAM_UNITY_TOOL_NAME),
-                                                  isBuildDevelopment         : env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true',
-                                                  isOptimizeBuildSize        : env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true',
-                                                  isNotifyToChatChannel      : env.PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL == 'true',
-                                                  keystoreName               : env.PARAM_KEYSTORE_NAME,
-                                                  keystorePass               : env.PARAM_KEYSTORE_PASSWORD,
-                                                  keystoreAliasName          : env.PARAM_KEYSTORE_ALIAS_NAME,
-                                                  keystoreAliasPass          : env.PARAM_KEYSTORE_ALIAS_PASSWORD,
-                                                  isBuildAppBundle           : env.PARAM_SHOULD_BUILD_APP_BUNDLE == 'true',])
+                    jenkinsBuilder.loadResource()
+                    jenkinsBuilder.setupParameters([])
+                    jenkinsBuilder.importBuildSettings()
                 }
             }
         }
@@ -60,17 +38,7 @@ pipeline {
             post {
                 failure {
                     script {
-                        jenkinsBuilder.jenkinsUtils.runCommand('git clean -fd')
-                        jenkinsBuilder.jenkinsUtils.runCommand('git reset --hard')
-                        jenkinsBuilder.jenkinsUtils.runCommand('git submodule foreach --recursive git reset --hard')
-
-                        if (jenkinsBuilder.settings.buildName) {
-                            if (isUnix()) {
-                                sh "rm -rf ./Unity${jenkinsBuilder.settings.buildName}/Library/Bee/"
-                            } else {
-                                powershell "Remove-Item -Recurse -Force .\\Unity${jenkinsBuilder.settings.buildName}\\Library\\Bee\\"
-                            }
-                        }
+                        jenkinsBuilder.cleanOnError()
                     }
                 }
 
