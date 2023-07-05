@@ -648,7 +648,7 @@ void ExportApkFromAAB(executableFile)
 {
     def apksFile = executableFile.replace(".aab", ".apks")
     def apksPath = "${BUILD_LOCATION}${CLIENT_PLATFORM}\\${apksFile}"
-    powershell script: "java -jar .\\JenkinsScripts\\bundletool-all.jar build-apks --bundle=${BUILD_LOCATION}${CLIENT_PLATFORM}\\${executableFile} --output=${apksPath} --ks=.\\Unity$BUILD_FILE_NAME\\${GetKeyStoreFileName()} --ks-pass=pass:\"$KEYSTORE_PASSWORD\" --ks-key-alias=theonestudio --key-pass=pass:\"$KEYSTORE_PASSWORD\" --mode=universal"
+    powershell script: "java -jar .\\JenkinsScripts\\bundletool-all.jar build-apks --bundle=${BUILD_LOCATION}${CLIENT_PLATFORM}\\${executableFile} --output=${apksPath} --ks=.\\Unity$BUILD_FILE_NAME\\${GetKeyStoreFileName()} --ks-pass=pass:\"$KEYSTORE_PASSWORD\" --ks-key-alias=\"$KEYSTORE_ALIAS_NAME\" --key-pass=pass:\"$KEYSTORE_PASSWORD\" --mode=universal"
     
     //uncompress apks
     def zipPath = apksPath.replace(".apks",".zip")
