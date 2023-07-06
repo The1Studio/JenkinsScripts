@@ -3,11 +3,11 @@ package utils
 import java.util.concurrent.TimeUnit
 
 class JenkinsUtils {
-    JenkinsWS ws
+    def ws
     def defaultValues
 
     JenkinsUtils(def ws) {
-        this.ws = new JenkinsWS(ws)
+        this.ws = ws
     }
 
     JenkinsUtils loadResource() {
@@ -38,11 +38,11 @@ class JenkinsUtils {
     }
 
     void replaceInFile(String file, String regex, Closure closure) {
-        String content = this.ws.readFile file: file
-        this.ws.echo "Before: $content"
+        String content = this.ws.readFile(file: file)
+        this.ws.echo("Before: $content")
         content = content.replaceAll(regex, closure)
-        this.ws.echo "After: $content"
-        this.ws.writeFile file: file, text: content
+        this.ws.echo("After: $content")
+        this.ws.writeFile(file: file, text: content)
     }
 
     void replaceWithJenkinsVariables(String file, HashMap<String, String> variables = [], boolean useEnv = true) {
