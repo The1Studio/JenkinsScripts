@@ -10,7 +10,7 @@ pipeline {
             steps {
                 script {
                     jenkinsBuilder.loadResource()
-                    jenkinsBuilder.setupParameters([])
+//                    jenkinsBuilder.setupParameters([])
                     jenkinsBuilder.importBuildSettings()
                 }
             }
