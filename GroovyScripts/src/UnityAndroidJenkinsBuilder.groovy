@@ -14,11 +14,11 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
     @Override
     void setupParameters(List params) throws Exception {
         params.addAll([
-            this.ws.string(name: 'PARAM_KEYSTORE_NAME', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["keystore-name"], description: 'Keystore name'),
-            this.ws.password(name: 'PARAM_KEYSTORE_PASSWORD', description: 'Keystore password'),
-            this.ws.string(name: 'PARAM_KEYSTORE_ALIAS_NAME', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["keystore-alias-name"], description: 'Keystore alias name'),
-            this.ws.password(name: 'PARAM_KEYSTORE_ALIAS_PASSWORD', description: 'Keystore alias password'),
-            this.ws.booleanParam(name: 'PARAM_SHOULD_BUILD_APP_BUNDLE', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["should-build-app-bundle"], description: 'Should build app bundle'),
+                this.ws.string(name: 'PARAM_KEYSTORE_NAME', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["keystore-name"], description: 'Keystore name'),
+                this.ws.password(name: 'PARAM_KEYSTORE_PASSWORD', description: 'Keystore password'),
+                this.ws.string(name: 'PARAM_KEYSTORE_ALIAS_NAME', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["keystore-alias-name"], description: 'Keystore alias name'),
+                this.ws.password(name: 'PARAM_KEYSTORE_ALIAS_PASSWORD', description: 'Keystore alias password'),
+                this.ws.booleanParam(name: 'PARAM_SHOULD_BUILD_APP_BUNDLE', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["should-build-app-bundle"], description: 'Should build app bundle'),
         ])
 
         super.setupParameters(params)
@@ -40,16 +40,18 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
 
     @Override
     void build() throws Exception {
+        String outputPath = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.${this.settings.isBuildAppBundle ? 'aab' : 'apk'}"
+
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
-            def buildCommand = [this.ws.isUnix() ? "./Unity" : ".\\Unity.exe",
-                                " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
-                                "-platforms ${this.settings.platform}",
-                                "-scriptingBackend ${this.settings.scriptingBackend}",
-                                "-projectPath \"${this.settings.unityProjectPathAbsolute}\"",
-                                "-logFile \"${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}\"",
-                                "-outputPath \"${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}\"",
-                                "-scriptingDefineSymbols \"${this.settings.unityScriptingDefineSymbols}\"",].join(' ')
+            String buildCommand = [this.ws.isUnix() ? "./Unity" : ".\\Unity.exe",
+                                   " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
+                                   "-platforms ${this.settings.platform}",
+                                   "-scriptingBackend ${this.settings.scriptingBackend}",
+                                   "-projectPath \"${this.settings.unityProjectPathAbsolute}\"",
+                                   "-logFile \"${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}\"",
+                                   "-outputPath \"$outputPath\"",
+                                   "-scriptingDefineSymbols \"${this.settings.unityScriptingDefineSymbols}\"",].join(' ')
 
             if (this.settings.isBuildDevelopment) {
                 buildCommand += ' -development'
@@ -71,6 +73,12 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             }
 
             this.jenkinsUtils.runCommand(buildCommand)
+        }
+
+        // Extract apk from aab
+        if (this.settings.isBuildAppBundle) {
+            this.ws.echo "Extract apk from aab"
+            this.extractApkFromAab(outputPath, outputPath.replace('.aab', '.apk'))
         }
 
         if (!this.ws.fileExists(this.getBuildPathRelative { "${this.settings.buildName}.apk" })) {
@@ -131,5 +139,27 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 thumbnail: 'https://user-images.githubusercontent.com/9598614/205434501-dc9d4c7a-caad-48de-8ec2-ca586f320f87.png',
                 title: "${this.settings.jobName} - ${this.settings.buildNumber}",
                 webhookURL: this.settings.discordWebhookUrl)
+    }
+
+    void extractApkFromAab(String aabFile, String apkFile) {
+        this.ws.dir(this.getBuildPathRelative { '' }) {
+            String apksFile = aabFile.replace(".aab", ".apks")
+            String keystorePath = this.jenkinsUtils.combinePath(this.settings.unityProjectPathAbsolute, this.settings.keystoreName)
+
+            this.jenkinsUtils.runCommand([
+                    "java -jar .\\JenkinsScripts\\bundletool-all.jar build-apks",
+                    "--bundle=$aabFile",
+                    "--output=$apksFile",
+                    "--ks=$keystorePath",
+                    "--ks-pass=pass:\"${this.settings.keystorePass}\"",
+                    "--ks-key-alias=${this.settings.keystoreAliasName}",
+                    "--key-pass=pass:\"${this.settings.keystoreAliasPass}\"",
+                    "--mode=universal"
+            ].join(' '))
+
+            // uncompress apks
+            this.ws.unzip zipFile: apksFile, dir: "."
+            this.ws.fileOperations([this.ws.fileRenameOperation(destination: apkFile, source: "universal.apk")])
+        }
     }
 }
