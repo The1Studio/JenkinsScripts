@@ -41,6 +41,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
     @Override
     void build() throws Exception {
         String outputPath = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.${this.settings.isBuildAppBundle ? 'aab' : 'apk'}"
+        String apkPath = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.apk"
 
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
@@ -81,11 +82,11 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             this.extractApkFromAab(outputPath, outputPath.replace('.aab', '.apk'))
         }
 
-        if (!this.ws.fileExists(this.getBuildPathRelative { "${this.settings.buildName}.apk" })) {
+        if (!this.ws.fileExists(this.getBuildPathRelative { apkPath })) {
             this.ws.error("No apk found after build")
         }
 
-        if (this.settings.isBuildAppBundle && !this.ws.fileExists(this.getBuildPathRelative { "${this.settings.buildName}.aab" })) {
+        if (this.settings.isBuildAppBundle && !this.ws.fileExists(this.getBuildPathRelative { outputPath })) {
             this.ws.error("No aab found after build")
         }
     }
