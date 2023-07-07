@@ -10,9 +10,9 @@ class UnitySettings {
     public String scriptingBackend
     public String unityScriptingDefineSymbols
 
-    public String unityIdEmail
-    public String unityIdPassword
-    public String unityIdLicense
+    public Object unityIdEmail
+    public Object unityIdPassword
+    public Object unityIdLicense
 
     public String uploadDomain
     public String discordWebhookUrl

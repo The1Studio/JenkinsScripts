@@ -64,13 +64,29 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
 
             if (this.settings.isBuildAppBundle) {
                 // Login to Unity ID to build app without splash screen
-                this.jenkinsUtils.runCommand([
-                        this.ws.isUnix() ? './Unity' : '.\\Unity.exe',
-                        "-nographics -batchmode -quit",
-                        "-username ${this.settings.unityIdEmail}",
-                        "-password ${this.settings.unityIdPassword}",
-                        "-serial ${this.settings.unityIdLicense}"
-                ].join(' '))
+                this.ws.withEnv([
+                        "UNITY_USERNAME=${this.settings.unityIdEmail}",
+                        "UNITY_PASSWORD=${this.settings.unityIdPassword}",
+                        "UNITY_SERIAL=${this.settings.unityIdLicense}"
+                ]) {
+                    if (this.ws.isUnix()) {
+                        this.ws.sh([
+                                "./Unity",
+                                "-nographics -batchmode -quit",
+                                "-username \$UNITY_USERNAME",
+                                "-password \$UNITY_PASSWORD",
+                                "-serial \$UNITY_SERIAL"
+                        ].join(' '))
+                    } else {
+                        this.ws.powershell([
+                                ".\\Unity.exe",
+                                "-nographics -batchmode -quit",
+                                "-username %UNITY_USERNAME%",
+                                "-password %UNITY_PASSWORD%",
+                                "-serial %UNITY_SERIAL%"
+                        ].join(' '))
+                    }
+                }
 
                 buildCommand += ' -buildAppBundle'
                 buildCommand += " -keyStoreFileName \"${this.settings.keystoreName}\""
@@ -82,20 +98,18 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             this.jenkinsUtils.runCommand(buildCommand)
         }
 
-        this.ws.dir(this.settings.unityProjectPathAbsolute) {
-            // Extract apk from aab
-            if (this.settings.isBuildAppBundle) {
-                this.ws.echo "Extract apk from aab"
-                this.extractApkFromAab(outputPath, apkPath)
-            }
+        // Extract apk from aab
+        if (this.settings.isBuildAppBundle) {
+            this.ws.echo "Extract apk from aab"
+            this.extractApkFromAab(outputPath, apkPath)
+        }
 
-            if (!this.ws.fileExists(this.getBuildPathRelative { apkPath })) {
-                this.ws.error("No apk found after build")
-            }
+        if (!this.ws.fileExists(this.getBuildPathRelative { apkPath })) {
+            this.ws.error("No apk found after build")
+        }
 
-            if (this.settings.isBuildAppBundle && !this.ws.fileExists(this.getBuildPathRelative { outputPath })) {
-                this.ws.error("No aab found after build")
-            }
+        if (this.settings.isBuildAppBundle && !this.ws.fileExists(this.getBuildPathRelative { outputPath })) {
+            this.ws.error("No aab found after build")
         }
     }
 
