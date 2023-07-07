@@ -55,7 +55,7 @@ class JenkinsUtils {
 
     BuildResults getCurrentBuildResult() {
         try {
-            return BuildResults.valueOf(this.ws.currentBuild.currentResult.toString())
+            return BuildResults.valueOf(this.ws.currentBuild.result.toString())
         } catch (Exception ignored) {
             return BuildResults.UNKNOWN
         }
