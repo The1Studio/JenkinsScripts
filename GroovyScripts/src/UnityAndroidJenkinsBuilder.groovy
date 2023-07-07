@@ -63,9 +63,15 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             }
 
             if (this.settings.isBuildAppBundle) {
-//                this.jenkinsUtils.runCommand(
-//                        "${this.ws.isUnix() ? './Unity' : '.\\Unity.exe'} -nographics -batchmode -username %UNITY_ID_EMAIL% -password %UNITY_ID_PASSWORD% -serial %UNITY_ID_LICENSE% -quit"
-//                )
+                // Login to Unity ID to build app without splash screen
+                this.jenkinsUtils.runCommand([
+                        this.ws.isUnix() ? './Unity' : '.\\Unity.exe',
+                        "-nographics -batchmode -quit",
+                        "-username ${this.settings.unityIdEmail}",
+                        "-password ${this.settings.unityIdPassword}",
+                        "-serial ${this.settings.unityIdLicense}"
+                ].join(' '))
+
                 buildCommand += ' -buildAppBundle'
                 buildCommand += " -keyStoreFileName \"${this.settings.keystoreName}\""
                 buildCommand += " -keyStorePassword \"${this.settings.keystorePass}\""
@@ -76,18 +82,20 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             this.jenkinsUtils.runCommand(buildCommand)
         }
 
-        // Extract apk from aab
-        if (this.settings.isBuildAppBundle) {
-            this.ws.echo "Extract apk from aab"
-            this.extractApkFromAab(outputPath, outputPath.replace('.aab', '.apk'))
-        }
+        this.ws.dir(this.settings.unityProjectPathAbsolute) {
+            // Extract apk from aab
+            if (this.settings.isBuildAppBundle) {
+                this.ws.echo "Extract apk from aab"
+                this.extractApkFromAab(outputPath, apkPath)
+            }
 
-        if (!this.ws.fileExists(this.getBuildPathRelative { apkPath })) {
-            this.ws.error("No apk found after build")
-        }
+            if (!this.ws.fileExists(this.getBuildPathRelative { apkPath })) {
+                this.ws.error("No apk found after build")
+            }
 
-        if (this.settings.isBuildAppBundle && !this.ws.fileExists(this.getBuildPathRelative { outputPath })) {
-            this.ws.error("No aab found after build")
+            if (this.settings.isBuildAppBundle && !this.ws.fileExists(this.getBuildPathRelative { outputPath })) {
+                this.ws.error("No aab found after build")
+            }
         }
     }
 

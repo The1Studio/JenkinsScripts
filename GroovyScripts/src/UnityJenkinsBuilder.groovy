@@ -140,7 +140,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     }
 
     String getBuildPathRelative(Closure closure) {
-        return this.jenkinsUtils.combinePath('Build', 'Client', this.settings.platform, this.settings.buildName, closure(this) as String)
+        return this.jenkinsUtils.combinePath('Build', 'Client', this.settings.platform, closure(this) as String)
     }
 
     String[] getDefineSymbols() {
