@@ -168,12 +168,13 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         this.ws.dir(this.getBuildPathRelative { '' }) {
             String apksFile = aabFile.replace(".aab", ".apks")
             String keystorePath = this.jenkinsUtils.combinePath(this.settings.unityProjectPathAbsolute, this.settings.keystoreName)
+            String bundleToolPath = this.jenkinsUtils.combinePath(this.settings.rootPathAbsolute, "JenkinsScripts", "bundletool-all.jar")
 
             this.jenkinsUtils.runCommand([
-                    "java -jar .\\JenkinsScripts\\bundletool-all.jar build-apks",
+                    "java -jar \"$bundleToolPath\" build-apks",
                     "--bundle=$aabFile",
                     "--output=$apksFile",
-                    "--ks=$keystorePath",
+                    "--ks=\"$keystorePath\"",
                     "--ks-pass=pass:\"${this.settings.keystorePass}\"",
                     "--ks-key-alias=${this.settings.keystoreAliasName}",
                     "--key-pass=pass:\"${this.settings.keystoreAliasPass}\"",

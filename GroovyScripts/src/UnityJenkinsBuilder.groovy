@@ -19,8 +19,10 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     }
 
     void setupParameters(List params) throws Exception {
-        params.addAll([
+        def listParams = [
+                this.ws.booleanParam(name: 'PARAM_SHOULD_RESET_JENKINS_PARAMS', defaultValue: false, description: 'Should reset jenkins params'),
                 this.ws.string(name: 'PARAM_BUILD_FILE_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-file-name'], description: 'Build file name'),
+                this.ws.string(name: 'PARAM_BUILD_VERSION', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-version'], description: 'Build version. Ex: 1.0.0'),
                 this.ws.string(name: 'PARAM_UNITY_TOOL_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['unity-tool-name'], description: 'Unity tool name'),
                 this.ws.choice(name: 'PARAM_UNITY_SCRIPTING_BACKEND', choices: this.jenkinsUtils.defaultValues['build-settings']['unity-scripting-backend'], description: 'Unity scripting backend'),
                 this.ws.string(name: 'PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['unity-scripting-define-symbols'], description: 'Unity scripting define symbols'),
@@ -28,10 +30,18 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
                 this.ws.booleanParam(name: 'PARAM_SHOULD_BUILD_DEVELOPMENT', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['should-build-development'], description: 'Should build development'),
                 this.ws.booleanParam(name: 'PARAM_SHOULD_OPTIMIZE_BUILD_SIZE', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['should-optimize-build-size'], description: 'Should optimize build size'),
                 this.ws.booleanParam(name: 'PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['should-notify-to-chat-channel'], description: 'Should notify to chat channel'),
-        ])
+        ]
+
+        listParams.addAll(params)
 
         //noinspection GroovyAssignabilityCheck
-        this.ws.properties([this.ws.parameters(params)])
+        if (this.env.PARAM_SHOULD_RESET_JENKINS_PARAMS == 'false') {
+            return
+        }
+
+        // reset parameters
+        this.ws.properties([this.ws.parameters(listParams)])
+        this.ws.error("Resetting Jenkins parameters...")
     }
 
     void importBuildSettings() throws Exception {
@@ -44,7 +54,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         this.settings.jobName = this.env.JOB_NAME
         this.settings.buildName = this.env.PARAM_BUILD_FILE_NAME
         this.settings.buildNumber = this.env.BUILD_NUMBER
-        this.settings.buildVersion = this.env.BUILD_VERSION
+        this.settings.buildVersion = this.env.PARAM_BUILD_VERSION
         this.settings.scriptingBackend = this.env.PARAM_UNITY_SCRIPTING_BACKEND
         this.settings.unityScriptingDefineSymbols = this.env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS
         this.settings.unityIdEmail = this.ws.credentials('jenkins-id-for-unity-email')
