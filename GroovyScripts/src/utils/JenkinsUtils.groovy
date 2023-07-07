@@ -57,15 +57,29 @@ class JenkinsUtils {
         try {
             this.ws.echo "Current build result: ${this.ws.currentBuild.result}"
             this.ws.echo "Current build current result: ${this.ws.currentBuild.currentResult}"
-            return BuildResults.valueOf(this.ws.currentBuild.currentResult.toString())
+
+            switch (this.ws.currentBuild.currentResult.toString()) {
+                case 'SUCCESS':
+                    return BuildResults.SUCCESS
+                case 'FAILURE':
+                    return BuildResults.FAILURE
+                case 'ABORTED':
+                    return BuildResults.ABORTED
+                case 'UNSTABLE':
+                    return BuildResults.UNSTABLE
+                case 'NOT_BUILT':
+                    return BuildResults.NOT_BUILT
+                default:
+                    throw new Exception("Unknown build result: ${this.ws.currentBuild.currentResult}")
+            }
         } catch (Exception ignored) {
-            this.ws.echo "Failed to get current build result: ${ignored.message}"
+            this.ws.echo ignored.message
             return BuildResults.UNKNOWN
         }
     }
 
     String combinePath(String... paths) {
-        return paths.join(this.ws.isUnix() ? '/' : '\\' )
+        return paths.join(this.ws.isUnix() ? '/' : '\\')
     }
 
     Boolean isCurrentBuildSuccess() {
