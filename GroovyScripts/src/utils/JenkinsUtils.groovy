@@ -55,8 +55,11 @@ class JenkinsUtils {
 
     BuildResults getCurrentBuildResult() {
         try {
-            return BuildResults.valueOf(this.ws.currentBuild.result.toString())
+            this.ws.echo "Current build result: ${this.ws.currentBuild.result}"
+            this.ws.echo "Current build current result: ${this.ws.currentBuild.currentResult}"
+            return BuildResults.valueOf(this.ws.currentBuild.currentResult.toString())
         } catch (Exception ignored) {
+            this.ws.echo "Failed to get current build result: ${ignored.message}"
             return BuildResults.UNKNOWN
         }
     }
