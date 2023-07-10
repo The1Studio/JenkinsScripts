@@ -1,7 +1,8 @@
+import settings.UnityIOSSettings
 import settings.UnityWebGLSettings
 import utils.FacebookAppAPI
 
-class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuilder, UnityWebGLSettings> {
+class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
 
     private String accessUrl
     private String accessZipUrl
@@ -17,16 +18,30 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
     }
 
     @Override
-    UnityWebGLJenkinsBuilder importBuildSettings(Object buildSetting) throws Exception {
-        super.importBuildSettings(buildSetting)
+    void setupParameters(List params) throws Exception {
+        params.addAll([
+                this.ws.choice(choices: this.jenkinsUtils.defaultValues["build-settings"]["webgl"]["orientation"], name: 'PARAM_ORIENTATION'),
+                this.ws.string(name: 'PARAM_FACEBOOK_APP_ID', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["webgl"]["facebook-app-id"],  trim: true),
+                this.ws.password(name: 'PARAM_FACEBOOK_APP_SECRET'),
+                this.ws.booleanParam(name: 'PARAM_SHOULD_UPLOAD_TO_FACEBOOK', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["webgl"]["should-upload-to-facebook"])
+        ])
+
+        super.setupParameters(params)
+    }
+
+    @Override
+    void importBuildSettings() throws Exception {
+        this.settings = new UnityWebGLSettings()
+
+        super.importBuildSettings()
 
         this.settings.platform = 'webgl'
+        this.settings.scriptingBackend = 'il2cpp'
+        this.settings.orientation = env.PARAM_ORIENTATION
 
         if (this.settings.isUploadToFacebook) {
             this.settings.isUploadToFacebook = this.settings.facebookAppId != null && !this.settings.facebookAppId.isBlank() && this.settings.facebookAppSecret != null && !this.settings.facebookAppSecret.isBlank()
         }
-
-        return this
     }
 
     @Override
@@ -139,9 +154,6 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
                 webhookURL: this.settings.discordWebhookUrl)
     }
 
-    @Override
-    void notifyToGithub() throws Exception {}
-
     void uploadBuildToFacebook(String zipFile) throws Exception {
         String appId = this.settings.facebookAppId
         String appSecret = this.settings.facebookAppSecret
@@ -156,15 +168,10 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLJenkinsBuil
                 .uploadBundleAssets(zipFile, "The One Studio WebGL Build#${this.settings.buildNumber} - Build Version ${this.settings.buildVersion}")
     }
 
-    String getBuildPathRelative(Closure closure) {
-        return "Build/Client/${this.settings.platform}/${this.settings.buildName}/${closure(this)}"
-    }
-
     void replaceFacebookAppConfigJson() {
-        def variables = ['ORIENTATION': this.settings.orientation,]
 
         for (def file : this.ws.findFiles(glob: "**/Assets/**/fbapp-config.json")) {
-            this.jenkinsUtils.replaceWithJenkinsVariables(file.path as String, variables)
+            this.jenkinsUtils.replaceWithJenkinsVariables(file.path as String)
         }
     }
 }

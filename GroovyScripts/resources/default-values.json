@@ -4,5 +4,29 @@
         "region": "ap-southeast-1",
         "credentials": "the1-s3-credential",
         "domain": "https://the1studio-builds.s3.ap-southeast-1.amazonaws.com"
+    },
+    "build-settings": {
+        "build-file-name": "",
+        "unity-tool-name": "Unity3D 2022.3.2f1",
+        "unity-scripting-backend": ["il2cpp", "mono"],
+        "unity-scripting-define-symbols": "",
+        "discord-webhook-url": "",
+        "should-build-development": true,
+        "should-optimize-build-size": true,
+        "should-notify-to-chat-channel": false,
+
+        "android": {
+            "should-build-app-bundle": false,
+            "keystore-name": "theonestudio_googleplay.keystore",
+            "keystore-alias-name": "theonestudio_googleplay.keystore"
+        },
+        "webgl": {
+            "orientation": ["PORTRAIT", "LANDSCAPE"],
+            "facebook-app-id": "",
+            "should-upload-to-facebook": false
+        },
+        "iod": {
+            "signing-key-id": ""
+        }
     }
 }

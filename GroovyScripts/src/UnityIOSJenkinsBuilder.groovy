@@ -1,6 +1,7 @@
+import settings.UnityAndroidSettings
 import settings.UnityIOSSettings
 
-class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSJenkinsBuilder, UnityIOSSettings> {
+class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
     protected String uploadIpaUrl
     protected String uploadArchiveUrl
@@ -13,12 +14,22 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSJenkinsBuilder,
     }
 
     @Override
-    UnityIOSJenkinsBuilder importBuildSettings(Object buildSetting) throws Exception {
-        super.importBuildSettings(buildSetting)
+    void setupParameters(List params) throws Exception {
+        params.addAll([
+                this.ws.string(name: 'PARAM_SIGNING_TEAM_ID', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["ios"]["signing-key-id"], description: 'Signing Team ID'),
+        ])
+
+        super.setupParameters(params)
+    }
+
+    @Override
+    void importBuildSettings() throws Exception {
+        this.settings = new UnityIOSSettings()
+
+        super.importBuildSettings()
 
         this.settings.platform = 'ios'
-
-        return this
+        this.settings.signingTeamId = env.PARAM_SIGNING_TEAM_ID
     }
 
     @Override
@@ -120,12 +131,5 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSJenkinsBuilder,
                 thumbnail: 'https://user-images.githubusercontent.com/9598614/205434501-dc9d4c7a-caad-48de-8ec2-ca586f320f87.png',
                 title: "${this.settings.jobName} - ${this.settings.buildNumber}",
                 webhookURL: this.settings.discordWebhookUrl)
-    }
-
-    @Override
-    void notifyToGithub() throws Exception {}
-
-    String getBuildPathRelative(Closure closure) {
-        return "Build/Client/${this.settings.platform}/${this.settings.buildName}/${closure(this)}"
     }
 }

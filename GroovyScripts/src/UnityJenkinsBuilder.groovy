@@ -1,6 +1,7 @@
+import settings.UnitySettings
 import utils.JenkinsUtils
 
-abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSetting> {
+abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
     protected TBuildSetting settings
     protected def ws
@@ -12,26 +13,65 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
         this.env = this.ws.env
     }
 
-    TThis loadResource() throws Exception {
+    void loadResource() throws Exception {
+        this.ws.echo "Load resource..."
         this.jenkinsUtils = new JenkinsUtils(this.ws).loadResource()
-        return this as TThis
     }
 
-    TThis importBuildSettings(def buildSetting) throws Exception {
-        this.ws.echo "Importing build settings..."
-        if (buildSetting instanceof HashMap) {
-            for (def pair : buildSetting) {
-                this.ws.echo "${pair.key} = ${pair.value}"
-            }
+    void setupParameters(List params) throws Exception {
+        def listParams = [
+                this.ws.booleanParam(name: 'PARAM_SHOULD_RESET_JENKINS_PARAMS', defaultValue: false, description: 'Should reset jenkins params'),
+                this.ws.string(name: 'PARAM_BUILD_FILE_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-file-name'], description: 'Build file name'),
+                this.ws.string(name: 'PARAM_BUILD_VERSION', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-version'], description: 'Build version. Ex: 1.0.0'),
+                this.ws.string(name: 'PARAM_UNITY_TOOL_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['unity-tool-name'], description: 'Unity tool name'),
+                this.ws.choice(name: 'PARAM_UNITY_SCRIPTING_BACKEND', choices: this.jenkinsUtils.defaultValues['build-settings']['unity-scripting-backend'], description: 'Unity scripting backend'),
+                this.ws.string(name: 'PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['unity-scripting-define-symbols'], description: 'Unity scripting define symbols'),
+                this.ws.string(name: 'PARAM_DISCORD_WEBHOOK_URL', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['discord-webhook-url'], description: 'Discord webhook url'),
+                this.ws.booleanParam(name: 'PARAM_SHOULD_BUILD_DEVELOPMENT', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['should-build-development'], description: 'Should build development'),
+                this.ws.booleanParam(name: 'PARAM_SHOULD_OPTIMIZE_BUILD_SIZE', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['should-optimize-build-size'], description: 'Should optimize build size'),
+                this.ws.booleanParam(name: 'PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['should-notify-to-chat-channel'], description: 'Should notify to chat channel'),
+        ]
+
+        listParams.addAll(params)
+
+        //noinspection GroovyAssignabilityCheck
+        if (this.env.PARAM_SHOULD_RESET_JENKINS_PARAMS == 'false') {
+            return
         }
 
-        this.settings = buildSetting as TBuildSetting
+        // reset parameters
+        this.ws.properties([this.ws.parameters(listParams)])
+        this.ws.error("Resetting Jenkins parameters...")
+    }
+
+    void importBuildSettings() throws Exception {
+        this.ws.echo "Importing build settings..."
+
+        String workingDir = this.ws.pwd()
+
+        this.settings = this.settings ?: [] as TBuildSetting
+
+        this.settings.jobName = this.env.JOB_NAME
+        this.settings.buildName = this.env.PARAM_BUILD_FILE_NAME
+        this.settings.buildNumber = this.env.BUILD_NUMBER
+        this.settings.buildVersion = this.env.PARAM_BUILD_VERSION
+        this.settings.scriptingBackend = this.env.PARAM_UNITY_SCRIPTING_BACKEND
+        this.settings.unityScriptingDefineSymbols = this.env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS
+        this.settings.unityIdEmail = this.ws.credentials('jenkins-id-for-unity-email')
+        this.settings.unityIdPassword = this.ws.credentials('jenkins-id-for-unity-password')
+        this.settings.unityIdLicense = this.ws.credentials('jenkins-id-for-unity-license')
+        this.settings.uploadDomain = this.env.PARAM_BUILD_DOWNLOAD_URL
+        this.settings.discordWebhookUrl = this.env.PARAM_DISCORD_WEBHOOK_URL
+        this.settings.rootPathAbsolute = workingDir
+        this.settings.unityProjectPathAbsolute = this.jenkinsUtils.combinePath(workingDir, "Unity${env.PARAM_BUILD_FILE_NAME}")
+        this.settings.unityBinaryPathAbsolute = this.ws.tool(name: env.PARAM_UNITY_TOOL_NAME)
+        this.settings.isBuildDevelopment = this.env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true'
+        this.settings.isOptimizeBuildSize = this.env.PARAM_SHOULD_OPTIMIZE_BUILD_SIZE == 'true'
+        this.settings.isNotifyToChatChannel = this.env.PARAM_SHOULD_NOTIFY_TO_CHAT_CHANNEL == 'true'
 
         if (this.settings.uploadDomain == null || this.settings.uploadDomain.isBlank()) {
             this.settings.uploadDomain = this.jenkinsUtils.defaultValues['s3-settings']['domain']
         }
-
-        return this as TThis
     }
 
     void clean() throws Exception {
@@ -42,10 +82,13 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
         this.jenkinsUtils.runCommand("git submodule foreach --recursive git clean -fd")
         this.jenkinsUtils.runCommand("git submodule foreach --recursive git reset --hard")
 
-        if (this.ws.isUnix()) {
-            this.ws.sh "rm -rf ./Build/"
-        } else {
-            this.ws.powershell "Remove-Item -Recurse -Force .\\Build\\"
+        try {
+            if (this.ws.isUnix()) {
+                this.ws.sh "rm -rf ./Build/"
+            } else {
+                this.ws.powershell "Remove-Item -Recurse -Force .\\Build\\"
+            }
+        } catch (Exception ignored) {
         }
 
 
@@ -62,19 +105,35 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
         this.ws.echo "---- End cleaning ----"
     }
 
+    void cleanOnError() throws Exception {
+        this.ws.echo "---- Start cleaning on error ----"
+
+        this.jenkinsUtils.runCommand('git clean -fd')
+        this.jenkinsUtils.runCommand('git reset --hard')
+        this.jenkinsUtils.runCommand('git submodule foreach --recursive git reset --hard')
+
+        if (this.settings.buildName) {
+            if (this.ws.isUnix()) {
+                this.ws.sh "rm -rf ./Unity${this.settings.buildName}/Library/Bee/"
+            } else {
+                this.ws.powershell "Remove-Item -Recurse -Force .\\Unity${this.settings.buildName}\\Library\\Bee\\"
+            }
+        }
+
+        this.ws.echo "---- End cleaning on error ----"
+    }
+
     abstract void build() throws Exception
 
     abstract void uploadBuild() throws Exception
 
     abstract void notifyToChatChannel() throws Exception
 
-    abstract void notifyToGithub() throws Exception
-
     String getLogPath(boolean absolute = true, Closure closure) {
-        String relative = "Build/Logs/${closure(this)}"
+        String relative = this.jenkinsUtils.combinePath('Build', 'Logs', closure(this) as String)
 
         if (absolute) {
-            return "${this.settings.rootPathAbsolute}/${relative}"
+            return this.jenkinsUtils.combinePath(this.settings.rootPathAbsolute, relative)
         }
 
         return relative
@@ -90,7 +149,11 @@ abstract class UnityJenkinsBuilder<TThis extends UnityJenkinsBuilder, TBuildSett
         return "${this.settings.uploadDomain}/${url}"
     }
 
+    String getBuildPathRelative(Closure closure) {
+        return this.jenkinsUtils.combinePath('Build', 'Client', this.settings.platform, closure(this) as String)
+    }
+
     String[] getDefineSymbols() {
-        return (this.settings.unityScriptingDefineSymbols as String).split(';')
+        return this.settings.unityScriptingDefineSymbols.split(';')
     }
 }

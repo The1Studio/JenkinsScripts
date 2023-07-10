@@ -1,5 +1,5 @@
 //The global script scope
-def ctx = context(scope: scriptScope())
+def ctx = context(scope: scriptScope(null))
 
 //What things can be on the script scope
 contributor(ctx) {
@@ -73,11 +73,15 @@ contributor(ctx) {
     property(name: 'verifyApplicationIsInitialized', type: 'org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariable')
     property(name: 'verifyApplicationIsInitializedNoCreds', type: 'org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariable')
 }
+
 //Steps that require a node context
-def closures = context(scope: closureScope())
+def closures = context(scope: closureScope(null))
 contributor(closures) {
     // What things can be inside a node or pipeline
-    if (enclosingCall('node') || enclosingCall("pipeline")) {
+    if (enclosingCall('node') || enclosingCall('pipeline')) {
+        variable(name: 'any', type: 'Closure')
+        variable(name: 'none', type: 'Closure')
+
         method(name: '_OcAction', type: 'Object', namedParams: [parameter(name: 'server', type: 'java.lang.String'), parameter(name: 'project', type: 'java.lang.String'), parameter(name: 'verb', type: 'java.lang.String'), parameter(name: 'verbArgs', type: 'java.util.List'), parameter(name: 'userArgs', type: 'java.util.List'), parameter(name: 'options', type: 'java.util.List'), parameter(name: 'verboseOptions', type: 'java.util.List'), parameter(name: 'token', type: 'java.lang.String'), parameter(name: 'streamStdOutToConsolePrefix', type: 'java.lang.String'), parameter(name: 'reference', type: 'Map'), parameter(name: 'logLevel', type: 'int'),], doc: 'Internal utility function for OpenShift DSL')
         method(name: '_OcContextInit', type: 'Object', params: [:], doc: 'Advanced/Deprecated Internal utility function for OpenShift DSL')
         method(name: '_OcWatch', type: 'Object', params: [body: Closure], namedParams: [parameter(name: 'server', type: 'java.lang.String'), parameter(name: 'project', type: 'java.lang.String'), parameter(name: 'verb', type: 'java.lang.String'), parameter(name: 'verbArgs', type: 'java.util.List'), parameter(name: 'userArgs', type: 'java.util.List'), parameter(name: 'options', type: 'java.util.List'), parameter(name: 'verboseOptions', type: 'java.util.List'), parameter(name: 'token', type: 'java.lang.String'), parameter(name: 'logLevel', type: 'int'),], doc: 'Internal utility function for OpenShift DSL')

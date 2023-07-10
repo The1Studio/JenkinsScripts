@@ -1,5 +1,7 @@
 package utils
 
+import java.util.concurrent.TimeUnit
+
 class JenkinsUtils {
     def ws
     def defaultValues
@@ -25,7 +27,7 @@ class JenkinsUtils {
         if (this.ws.isUnix()) {
             return Long.parseLong(this.ws.sh(returnStdout: true, script: "du -sh -m $path | awk '{print \$1}'").trim() as String)
         }
-        return Long.parseLong(this.ws.powershell(returnStdout: true, script: "Write-Host((Get-Item $path).length)").trim() as String) / (1024 * 1024)
+        return Long.parseLong(this.ws.powershell(returnStdout: true, script: "Write-Output((Get-Item $path).length)").trim() as String) / (1024 * 1024)
     }
 
     def runCommand(String script, boolean returnStdout = false, String encoding = 'UTF-8', String label = '', boolean returnStatus = false) {
@@ -36,14 +38,14 @@ class JenkinsUtils {
     }
 
     void replaceInFile(String file, String regex, Closure closure) {
-        String content = this.ws.readFile file: file
-        this.ws.echo "Before: $content"
+        String content = this.ws.readFile(file: file)
+        this.ws.echo("Before: $content")
         content = content.replaceAll(regex, closure)
-        this.ws.echo "After: $content"
-        this.ws.writeFile file: file, text: content
+        this.ws.echo("After: $content")
+        this.ws.writeFile(file: file, text: content)
     }
 
-    void replaceWithJenkinsVariables(String file, HashMap<String, String> variables, boolean useEnv = true) {
+    void replaceWithJenkinsVariables(String file, HashMap<String, String> variables = [], boolean useEnv = true) {
         this.replaceInFile(file, /\$\{JENKINS_(.+?)\}/) {
             String match = it[0]
             String group = it[1]
@@ -53,10 +55,31 @@ class JenkinsUtils {
 
     BuildResults getCurrentBuildResult() {
         try {
-            return BuildResults.valueOf(this.ws.currentBuild.currentResult.toString())
+            this.ws.echo "Current build result: ${this.ws.currentBuild.result}"
+            this.ws.echo "Current build current result: ${this.ws.currentBuild.currentResult}"
+
+            switch (this.ws.currentBuild.currentResult.toString()) {
+                case 'SUCCESS':
+                    return BuildResults.SUCCESS
+                case 'FAILURE':
+                    return BuildResults.FAILURE
+                case 'ABORTED':
+                    return BuildResults.ABORTED
+                case 'UNSTABLE':
+                    return BuildResults.UNSTABLE
+                case 'NOT_BUILT':
+                    return BuildResults.NOT_BUILT
+                default:
+                    throw new Exception("Unknown build result: ${this.ws.currentBuild.currentResult}")
+            }
         } catch (Exception ignored) {
+            this.ws.echo ignored.message
             return BuildResults.UNKNOWN
         }
+    }
+
+    String combinePath(String... paths) {
+        return paths.join(this.ws.isUnix() ? '/' : '\\')
     }
 
     Boolean isCurrentBuildSuccess() {
