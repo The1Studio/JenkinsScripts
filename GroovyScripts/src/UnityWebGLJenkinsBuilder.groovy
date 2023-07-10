@@ -154,6 +154,11 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
                 webhookURL: this.settings.discordWebhookUrl)
     }
 
+    @Override
+    String getBuildPathRelative(Closure closure) {
+        return this.jenkinsUtils.combinePath('Build', 'Client', this.settings.platform, this.settings.buildName, closure(this) as String)
+    }
+
     void uploadBuildToFacebook(String zipFile) throws Exception {
         String appId = this.settings.facebookAppId
         String appSecret = this.settings.facebookAppSecret
