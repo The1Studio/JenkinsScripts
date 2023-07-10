@@ -62,10 +62,10 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
                                 " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
                                 "-platforms ${this.settings.platform}",
                                 "-scriptingBackend ${this.settings.scriptingBackend}",
-                                "-projectPath '${this.settings.unityProjectPathAbsolute}'",
-                                "-logFile '${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}'",
-                                "-outputPath '${this.settings.buildName}'",
-                                "-scriptingDefineSymbols '${this.settings.unityScriptingDefineSymbols}'",].join(' ')
+                                "-projectPath \"${this.settings.unityProjectPathAbsolute}\"",
+                                "-logFile \"${this.getLogPath { "Build-Client.${this.settings.platform}.log" }}\"",
+                                "-outputPath \"${this.settings.buildName}\"",
+                                "-scriptingDefineSymbols \"${this.settings.unityScriptingDefineSymbols}\"",].join(' ')
 
             if (this.settings.isBuildDevelopment) {
                 buildCommand += ' -development'

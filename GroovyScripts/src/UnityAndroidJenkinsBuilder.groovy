@@ -150,6 +150,8 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 ${this.settings.platform} (${this.settings.jobName}) Build
                 Apk: ${this.uploadApkUrl} - ${this.buildSizeApk}MB
                 ${this.settings.isBuildAppBundle ? "Aab: ${this.uploadAabUrl} - ${this.buildSizeAab}MB" : "App bundle build is disabled"}
+                -----------------------------------------------------------
+                Define Symbols: \n```\n${this.getDefineSymbols().join('\n')}\n```
             """.stripMargin()
         }
 
