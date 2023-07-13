@@ -17,15 +17,15 @@
 
         "android": {
             "should-build-app-bundle": false,
-            "keystore-name": "theonestudio_googleplay.keystore",
-            "keystore-alias-name": "theonestudio_googleplay.keystore"
+            "keystore-name": "the1_googleplay.keystore",
+            "keystore-alias-name": "theonestudio"
         },
         "webgl": {
             "orientation": ["PORTRAIT", "LANDSCAPE"],
             "facebook-app-id": "",
             "should-upload-to-facebook": false
         },
-        "iod": {
+        "ios": {
             "signing-key-id": ""
         }
     }
