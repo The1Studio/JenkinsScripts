@@ -27,7 +27,7 @@ class JenkinsUtils {
         if (this.ws.isUnix()) {
             return Long.parseLong(this.ws.sh(returnStdout: true, script: "du -sh -m $path | awk '{print \$1}'").trim() as String)
         }
-        return Long.parseLong(this.ws.powershell(returnStdout: true, script: "Write-Output((Get-Item $path).length)").trim() as String) / (1024 * 1024)
+        return Long.parseLong(this.ws.powershell(returnStdout: true, script: "(gci $path -recurse | measure Length -s).sum").trim() as String) / (1024 * 1024)
     }
 
     def runCommand(String script, boolean returnStdout = false, String encoding = 'UTF-8', String label = '', boolean returnStatus = false) {
