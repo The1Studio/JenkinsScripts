@@ -39,6 +39,9 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
         this.settings.scriptingBackend = 'il2cpp'
         this.settings.orientation = env.PARAM_ORIENTATION
 
+        this.settings.facebookAppId = env.PARAM_FACEBOOK_APP_ID
+        this.settings.facebookAppSecret = env.PARAM_FACEBOOK_APP_SECRET
+
         if (this.settings.isUploadToFacebook) {
             this.settings.isUploadToFacebook = this.settings.facebookAppId != null && !this.settings.facebookAppId.isBlank() && this.settings.facebookAppSecret != null && !this.settings.facebookAppSecret.isBlank()
         }
