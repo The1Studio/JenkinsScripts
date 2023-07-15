@@ -55,9 +55,6 @@ class JenkinsUtils {
 
     BuildResults getCurrentBuildResult() {
         try {
-            this.ws.echo "Current build result: ${this.ws.currentBuild.result}"
-            this.ws.echo "Current build current result: ${this.ws.currentBuild.currentResult}"
-
             switch (this.ws.currentBuild.currentResult.toString()) {
                 case 'SUCCESS':
                     return BuildResults.SUCCESS
