@@ -41,6 +41,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
 
         this.settings.facebookAppId = env.PARAM_FACEBOOK_APP_ID
         this.settings.facebookAppSecret = env.PARAM_FACEBOOK_APP_SECRET
+        this.settings.isUploadToFacebook = env.PARAM_SHOULD_UPLOAD_TO_FACEBOOK == 'true'
 
         if (this.settings.isUploadToFacebook) {
             this.settings.isUploadToFacebook = this.settings.facebookAppId != null && !this.settings.facebookAppId.isBlank() && this.settings.facebookAppSecret != null && !this.settings.facebookAppSecret.isBlank()
