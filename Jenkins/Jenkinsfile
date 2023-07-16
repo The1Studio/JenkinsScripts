@@ -258,13 +258,22 @@ pipeline
                         
                         if (platform == "android" && env.SHOULD_BUILD_APP_BUNDLE)
                         {
+                            //apk
                             output = output.replace("aab", "apk")
                             artifact = artifact.replace("aab", "apk")
                             buildSize = GetBuildSize(artifact)
                             UploadToS3(artifact, "$downloadPath/$platform/$output")
-                            
                             downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                             bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
+                            //symbol file
+                            def symbolExtend = "-${env.BUILD_VERSION}-v${env.BUILD_NUMBER}-IL2CPP.zip"
+                            output = output.replace(".apk", "$symbolExtend")
+                            artifact = artifact.replace(".apk", "$symbolExtend")
+                            buildSize = GetBuildSize(artifact)
+                            UploadToS3(artifact, "$downloadPath/$platform/$output")
+                            downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
+                            bat "echo __$platform ($output) Symbol file - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
+                            
                             bat "echo __packageName: ${env.PACKAGE_NAME}__ >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                         }
                         
