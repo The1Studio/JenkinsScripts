@@ -266,7 +266,7 @@ pipeline
                             downloadURL = GetDownloadURL(platform, "$BUILD_DOWNLOAD_URL/$downloadPath/$platform/$output")
                             bat "echo __$platform ($output) Build - $buildSize MB__: $downloadURL >> $CHAT_NOTIFY_DESCRIPTION_FILE"
                             //symbol file
-                            def symbolExtend = "-${env.BUILD_VERSION}-v${env.BUILD_NUMBER}-IL2CPP.zip"
+                            def symbolExtend = "-${env.BUILD_VERSION}-v${env.BUILD_NUMBER}-IL2CPP.symbols.zip"
                             output = output.replace(".apk", "$symbolExtend")
                             artifact = artifact.replace(".apk", "$symbolExtend")
                             buildSize = GetBuildSize(artifact)
