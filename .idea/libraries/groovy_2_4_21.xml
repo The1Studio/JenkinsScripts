@@ -1,0 +1,50 @@
+<component name="libraryTable">
+  <library name="groovy-2.4.21" type="groovy-sdk">
+    <properties version="2.4.21" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/groovy-backports-compat23-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-nio-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-jsr223-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-bsf-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-servlet-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-ant-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-sql-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-json-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-jmx-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-docgenerator-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-groovydoc-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-testng-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-swing-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-groovysh-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-console-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-test-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-templates-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-xml-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-2.4.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-all-2.4.21.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/groovy-bsf-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-backports-compat23-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-docgenerator-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-ant-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-console-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-jmx-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-nio-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-jsr223-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-servlet-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-groovydoc-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-groovysh-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-testng-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-test-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-templates-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-sql-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-json-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-swing-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-xml-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-2.4.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-all-2.4.21-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
