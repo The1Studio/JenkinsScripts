@@ -1,5 +1,2 @@
 # ignore idea project files
 out/
-
-# ignore groovy libs
-lib/
