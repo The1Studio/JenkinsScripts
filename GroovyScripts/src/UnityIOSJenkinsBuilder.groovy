@@ -132,4 +132,9 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
                 title: "${this.settings.jobName} - ${this.settings.buildNumber}",
                 webhookURL: this.settings.discordWebhookUrl)
     }
+
+    @Override
+    String getBuildPathRelative(Closure closure) {
+        return this.jenkinsUtils.combinePath('Build', 'Client', this.settings.platform, this.settings.buildName, closure(this) as String)
+    }
 }
