@@ -22,7 +22,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         def listParams = [
                 this.ws.string(name: 'PARAM_CHECKOUT_JENKINS_REVISION', defaultValue: '', description: 'Checkout to jenkins revision or branch, if empty will do nothing'),
                 this.ws.booleanParam(name: 'PARAM_SHOULD_RESET_JENKINS_PARAMS', defaultValue: false, description: 'Should reset jenkins params'),
-                this.ws.string(name: 'PARAM_BUILD_FILE_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-file-name'], description: 'Build file name'),
+                this.ws.string(name: 'PARAM_BUILD_FILE_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-file-name'], description: 'Build file name, this must be the unity project folder name (without prefix "Unity")'),
                 this.ws.string(name: 'PARAM_BUILD_VERSION', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-version'], description: 'Build version. Ex: 1.0.0'),
                 this.ws.string(name: 'PARAM_UNITY_TOOL_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['unity-tool-name'], description: 'Unity tool name'),
                 this.ws.choice(name: 'PARAM_UNITY_SCRIPTING_BACKEND', choices: this.jenkinsUtils.defaultValues['build-settings']['unity-scripting-backend'], description: 'Unity scripting backend'),
@@ -72,6 +72,22 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
         if (this.settings.uploadDomain == null || this.settings.uploadDomain.isBlank()) {
             this.settings.uploadDomain = this.jenkinsUtils.defaultValues['s3-settings']['domain']
+        }
+
+        if (this.settings.buildName.isBlank()) {
+            this.ws.error('Missing param: PARAM_BUILD_FILE_NAME')
+        }
+
+        if (this.settings.buildNumber.isBlank()) {
+            this.ws.error('Missing param: BUILD_NUMBER')
+        }
+
+        if (this.settings.buildVersion.isBlank()) {
+            this.ws.error('Missing param: PARAM_BUILD_VERSION')
+        }
+
+        if (this.settings.unityScriptingDefineSymbols.isBlank()) {
+            this.ws.error('Missing param: PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS')
         }
     }
 
