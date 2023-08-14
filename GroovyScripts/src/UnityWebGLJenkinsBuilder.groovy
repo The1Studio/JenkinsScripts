@@ -51,7 +51,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
 
     @Override
     void build() throws Exception {
-        this.setupScriptDefineSymbols {}
+        this.setupScriptDefineSymbols()
 
         // Replace settings before build
         this.replaceFacebookAppConfigJson()
@@ -185,17 +185,5 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
         for (def file : this.ws.findFiles(glob: "**/Assets/**/fbapp-config.json")) {
             this.jenkinsUtils.replaceWithJenkinsVariables(file.path as String)
         }
-    }
-
-    @Override
-    void setupScriptDefineSymbols(Closure closure) {
-        super.setupScriptDefineSymbols({
-            UnityProjectSettings it ->
-                it.setScriptDefineSymbols(
-                        UnityProjectSettings.PlatformType.WebGL,
-                        this.settings.unityScriptingDefineSymbols,
-                )
-                return closure(it)
-        })
     }
 }

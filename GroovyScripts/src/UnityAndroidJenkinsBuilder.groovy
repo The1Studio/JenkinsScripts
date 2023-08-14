@@ -43,7 +43,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
 
     @Override
     void build() throws Exception {
-        this.setupScriptDefineSymbols {}
+        this.setupScriptDefineSymbols()
 
         String outputPath = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.${this.settings.isBuildAppBundle ? 'aab' : 'apk'}"
         String apkPath = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.apk"
@@ -201,17 +201,5 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             this.ws.unzip zipFile: apksFile, dir: "."
             this.ws.fileOperations([this.ws.fileRenameOperation(destination: apkFile, source: "universal.apk")])
         }
-    }
-
-    @Override
-    void setupScriptDefineSymbols(Closure closure) {
-        super.setupScriptDefineSymbols({
-            UnityProjectSettings it ->
-                it.setScriptDefineSymbols(
-                        UnityProjectSettings.PlatformType.Android,
-                        this.settings.unityScriptingDefineSymbols,
-                )
-                return closure(it)
-        })
     }
 }

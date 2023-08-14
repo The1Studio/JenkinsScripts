@@ -195,7 +195,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         return this.settings.unityScriptingDefineSymbols.split(';')
     }
 
-    void setupScriptDefineSymbols(Closure closure) {
+    void setupScriptDefineSymbols() {
         def filePath = this.jenkinsUtils.combinePath(
                 this.settings.unityProjectPathAbsolute,
                 'ProjectSettings',
@@ -207,8 +207,19 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
                         UnityProjectSettings.PlatformType.Standalone,
                         this.settings.unityScriptingDefineSymbols
                 )
+                .setScriptDefineSymbols(
+                        UnityProjectSettings.PlatformType.Android,
+                        this.settings.unityScriptingDefineSymbols
+                )
+                .setScriptDefineSymbols(
+                        UnityProjectSettings.PlatformType.WebGL,
+                        this.settings.unityScriptingDefineSymbols
+                )
+                .setScriptDefineSymbols(
+                        UnityProjectSettings.PlatformType.iPhone,
+                        this.settings.unityScriptingDefineSymbols
+                )
 
-        closure(projectSettings)
 
         this.ws.writeFile(filePath, projectSettings.getFileContent())
     }

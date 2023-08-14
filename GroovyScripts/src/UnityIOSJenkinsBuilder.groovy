@@ -35,7 +35,7 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
     @Override
     void build() throws Exception {
-        this.setupScriptDefineSymbols {}
+        this.setupScriptDefineSymbols()
 
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
@@ -139,17 +139,5 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
     @Override
     String getBuildPathRelative(Closure closure) {
         return this.jenkinsUtils.combinePath('Build', 'Client', this.settings.platform, this.settings.buildName, closure(this) as String)
-    }
-
-    @Override
-    void setupScriptDefineSymbols(Closure closure) {
-        super.setupScriptDefineSymbols({
-            UnityProjectSettings it ->
-                it.setScriptDefineSymbols(
-                        UnityProjectSettings.PlatformType.iPhone,
-                        this.settings.unityScriptingDefineSymbols,
-                )
-                return closure(it)
-        })
     }
 }
