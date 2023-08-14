@@ -1,6 +1,7 @@
 import settings.UnityIOSSettings
 import settings.UnityWebGLSettings
 import utils.FacebookAppAPI
+import utils.UnityProjectSettings
 
 class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
 
@@ -21,7 +22,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
     void setupParameters(List params) throws Exception {
         params.addAll([
                 this.ws.choice(choices: this.jenkinsUtils.defaultValues["build-settings"]["webgl"]["orientation"], name: 'PARAM_ORIENTATION'),
-                this.ws.string(name: 'PARAM_FACEBOOK_APP_ID', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["webgl"]["facebook-app-id"],  trim: true),
+                this.ws.string(name: 'PARAM_FACEBOOK_APP_ID', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["webgl"]["facebook-app-id"], trim: true),
                 this.ws.password(name: 'PARAM_FACEBOOK_APP_SECRET'),
                 this.ws.booleanParam(name: 'PARAM_SHOULD_UPLOAD_TO_FACEBOOK', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["webgl"]["should-upload-to-facebook"])
         ])
@@ -50,6 +51,8 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
 
     @Override
     void build() throws Exception {
+        this.setupScriptDefineSymbols {}
+
         // Replace settings before build
         this.replaceFacebookAppConfigJson()
 
@@ -182,5 +185,17 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
         for (def file : this.ws.findFiles(glob: "**/Assets/**/fbapp-config.json")) {
             this.jenkinsUtils.replaceWithJenkinsVariables(file.path as String)
         }
+    }
+
+    @Override
+    void setupScriptDefineSymbols(Closure closure) {
+        super.setupScriptDefineSymbols({
+            UnityProjectSettings it ->
+                it.setScriptDefineSymbols(
+                        UnityProjectSettings.PlatformType.WebGL,
+                        this.settings.unityScriptingDefineSymbols,
+                )
+                return closure(it)
+        })
     }
 }

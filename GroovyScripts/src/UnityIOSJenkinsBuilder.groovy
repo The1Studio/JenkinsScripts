@@ -1,5 +1,6 @@
 import settings.UnityAndroidSettings
 import settings.UnityIOSSettings
+import utils.UnityProjectSettings
 
 class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
@@ -34,6 +35,8 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
     @Override
     void build() throws Exception {
+        this.setupScriptDefineSymbols {}
+
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
             def command = ["./Unity -batchmode -quit -executeMethod Build.BuildFromCommandLine",
@@ -136,5 +139,17 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
     @Override
     String getBuildPathRelative(Closure closure) {
         return this.jenkinsUtils.combinePath('Build', 'Client', this.settings.platform, this.settings.buildName, closure(this) as String)
+    }
+
+    @Override
+    void setupScriptDefineSymbols(Closure closure) {
+        super.setupScriptDefineSymbols({
+            UnityProjectSettings it ->
+                it.setScriptDefineSymbols(
+                        UnityProjectSettings.PlatformType.iPhone,
+                        this.settings.unityScriptingDefineSymbols,
+                )
+                return closure(it)
+        })
     }
 }

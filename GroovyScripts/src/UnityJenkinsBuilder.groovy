@@ -1,5 +1,7 @@
+import groovy.transform.stc.ClosureParams
 import settings.UnitySettings
 import utils.JenkinsUtils
+import utils.UnityProjectSettings
 
 abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
@@ -191,5 +193,23 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
     String[] getDefineSymbols() {
         return this.settings.unityScriptingDefineSymbols.split(';')
+    }
+
+    void setupScriptDefineSymbols(Closure closure) {
+        def filePath = this.jenkinsUtils.combinePath(
+                this.settings.unityProjectPathAbsolute,
+                'ProjectSettings',
+                'ProjectSettings.asset'
+        )
+
+        def projectSettings = new UnityProjectSettings(this.ws.readFile(filePath) as String)
+                .setScriptDefineSymbols(
+                        UnityProjectSettings.PlatformType.Standalone,
+                        this.settings.unityScriptingDefineSymbols
+                )
+
+        closure(projectSettings)
+
+        this.ws.writeFile(filePath, projectSettings.getFileContent())
     }
 }
