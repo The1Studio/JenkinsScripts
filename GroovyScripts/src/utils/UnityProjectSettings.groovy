@@ -32,9 +32,13 @@ class UnityProjectSettings {
         def matcher = this.fileContent =~ /scriptingDefineSymbols:[\w\s;:]*(?:\s)($platform: [\w\s;]*?)\n/
         matcher.find()
 
-        this.fileContent = matcher.replaceAll {
-            it.group(0).replaceAll(it.group(1), "${platform}: ${scriptDefineSymbols}")
-        }
+        this.fileContent = matcher.replaceAll(
+                matcher.group(0).replaceAll(
+                        matcher.group(1),
+                        "${platform}: ${scriptDefineSymbols}"
+                )
+        )
+
 
         return this
     }
