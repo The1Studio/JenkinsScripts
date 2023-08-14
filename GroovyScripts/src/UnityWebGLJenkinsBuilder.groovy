@@ -98,11 +98,11 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
             this.folderSize = this.jenkinsUtils.fileSizeInMB('.')
 
             if (this.ws.fileExists("Build/${this.settings.buildName}.data")) {
-                this.dataSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.data")
+                this.dataSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.data.unityweb")
             }
 
             if (this.ws.fileExists("Build/${this.settings.buildName}.wasm")) {
-                this.wasmSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.wasm")
+                this.wasmSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.wasm.unityweb")
             }
 
             if (this.ws.fileExists("StreamingAssets")) {
