@@ -51,7 +51,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
 
     @Override
     void build() throws Exception {
-        this.setupScriptDefineSymbols()
+//        this.setupScriptDefineSymbols()
 
         // Replace settings before build
         this.replaceFacebookAppConfigJson()
