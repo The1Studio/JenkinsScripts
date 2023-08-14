@@ -136,10 +136,10 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
             this.jenkinsUtils.runCommand("git add ${jenkinsPath}")
             this.jenkinsUtils.runCommand("git commit -m \"Checkout JenkinsScripts to ${revision}\"")
-            this.jenkinsUtils.runCommand("git push origin HEAD:${env.BRANCH_NAME}}")
+            this.jenkinsUtils.runCommand("git push -f origin HEAD:checkout-new-jenkins-submodule")
 
             this.ws.echo "Pushing new jenkins submodule..."
-            this.ws.error("Check out JenkinsScripts to ${revision} successfully! Please build again!")
+            this.ws.error("Check out JenkinsScripts to ${revision} successfully! Please merge branch 'checkout-new-jenkins-submodule' into this branch then build again!")
         }
     }
 
