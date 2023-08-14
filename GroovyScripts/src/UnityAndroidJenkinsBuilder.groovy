@@ -43,7 +43,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
 
     @Override
     void build() throws Exception {
-        this.setupScriptDefineSymbols()
+//        this.setupScriptDefineSymbols()
 
         String outputPath = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.${this.settings.isBuildAppBundle ? 'aab' : 'apk'}"
         String apkPath = "${this.settings.buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.apk"
