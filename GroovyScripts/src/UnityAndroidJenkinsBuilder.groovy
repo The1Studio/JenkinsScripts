@@ -4,8 +4,10 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
 
     private long buildSizeApk
     private long buildSizeAab
+    private long buildSizeSymbol
     private String uploadApkUrl
     private String uploadAabUrl
+    private String uploadSymbolUrl
 
     UnityAndroidJenkinsBuilder(Object workflowScript) {
         super(workflowScript)
@@ -127,11 +129,19 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             this.ws.echo "Apk build url: ${this.uploadApkUrl} - ${this.buildSizeApk}MB"
 
             if (this.settings.isBuildAppBundle) {
+                //aab
                 String aabFile = "${buildName}.aab"
                 this.buildSizeAab = this.jenkinsUtils.fileSizeInMB(aabFile)
                 this.jenkinsUtils.uploadToS3(aabFile, "$uploadUrl/${aabFile}")
                 this.uploadAabUrl = "${this.settings.uploadDomain}/$uploadUrl/${aabFile}"
                 this.ws.echo "Aab build url: ${this.uploadAabUrl} - ${this.buildSizeAab}MB"
+
+                //symbol file
+                String symbolFile = "${buildName}-${this.settings.buildVersion}-v${this.settings.buildNumber}-IL2CPP.symbols.zip"
+                this.buildSizeSymbol = this.jenkinsUtils.fileSizeInMB(symbolFile)
+                this.jenkinsUtils.uploadToS3(symbolFile, "$uploadUrl/${symbolFile}")
+                this.uploadSymbolUrl = "${this.settings.uploadDomain}/$uploadUrl/${symbolFile}"
+                this.ws.echo "Symbol build url: ${this.uploadSymbolUrl} - ${this.buildSizeSymbol}MB"
             }
         }
     }
@@ -150,6 +160,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 ${this.settings.platform} (${this.settings.jobName}) Build
                 Apk: ${this.uploadApkUrl} - ${this.buildSizeApk}MB
                 ${this.settings.isBuildAppBundle ? "Aab: ${this.uploadAabUrl} - ${this.buildSizeAab}MB" : "App bundle build is disabled"}
+                ${this.settings.isBuildAppBundle ? "Symbol: ${this.uploadSymbolUrl} - ${this.buildSizeSymbol}MB" : "App bundle build is disabled"}
                 -----------------------------------------------------------
                 Define Symbols: \n```\n${this.getDefineSymbols().join('\n')}\n```
             """.stripMargin()
