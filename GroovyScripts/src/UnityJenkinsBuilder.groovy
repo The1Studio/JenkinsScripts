@@ -1,4 +1,3 @@
-import groovy.transform.stc.ClosureParams
 import settings.UnitySettings
 import utils.JenkinsUtils
 import utils.UnityProjectSettings
@@ -221,6 +220,6 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
                 )
 
 
-        this.ws.writeFile(filePath, projectSettings.getFileContent())
+        this.ws.writeFile(filePath, projectSettings.exportFileContent())
     }
 }

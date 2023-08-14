@@ -39,7 +39,7 @@ class UnityProjectSettings {
         return this
     }
 
-    String getFileContent() {
+    String exportFileContent() {
         return this.fileContent
     }
 }
