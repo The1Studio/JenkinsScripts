@@ -29,16 +29,19 @@ class UnityProjectSettings {
     }
 
     UnityProjectSettings setScriptDefineSymbols(String platform, String scriptDefineSymbols) {
-        def matcher = this.fileContent =~ /scriptingDefineSymbols:[\w\s;:]*(?:\s)($platform: [\w\s;]*?)\n/
-        matcher.find()
+        try {
+            def matcher = this.fileContent =~ /scriptingDefineSymbols:[\w\s;:]*(?:\s)($platform: [\w\s;]*?)\n/
+            matcher.find()
 
-        this.fileContent = matcher.replaceAll(
-                matcher.group(0).replaceAll(
-                        matcher.group(1),
-                        "${platform}: ${scriptDefineSymbols}"
-                )
-        )
-
+            this.fileContent = matcher.replaceAll(
+                    matcher.group(0).replaceAll(
+                            matcher.group(1),
+                            "${platform}: ${scriptDefineSymbols}"
+                    )
+            )
+        } catch (Exception e) {
+            // ignore
+        }
 
         return this
     }

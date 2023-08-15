@@ -35,7 +35,7 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
     @Override
     void build() throws Exception {
-//        this.setupScriptDefineSymbols()
+        this.setupScriptDefineSymbols()
 
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {

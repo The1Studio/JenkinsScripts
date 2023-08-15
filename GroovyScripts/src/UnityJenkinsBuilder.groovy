@@ -220,6 +220,6 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
                 )
 
 
-        this.ws.writeFile(filePath, projectSettings.exportFileContent())
+        this.ws.writeFile file: filePath, text: projectSettings.exportFileContent()
     }
 }
