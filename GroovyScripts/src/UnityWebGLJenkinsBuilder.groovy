@@ -67,6 +67,7 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
 
             def buildCommand = [this.ws.isUnix() ? "./Unity" : ".\\Unity.exe",
                                 " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
+                                "-buildTarget WebGL",
                                 "-platforms ${this.settings.platform}",
                                 "-scriptingBackend ${this.settings.scriptingBackend}",
                                 "-projectPath \"${this.settings.unityProjectPathAbsolute}\"",

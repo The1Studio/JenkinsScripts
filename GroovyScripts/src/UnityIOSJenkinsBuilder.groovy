@@ -40,6 +40,7 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
             def command = ["./Unity -batchmode -quit -executeMethod Build.BuildFromCommandLine",
+                           "-buildTarget iOS",
                            "-platforms ${this.settings.platform}",
                            "-scriptingBackend ${this.settings.scriptingBackend}",
                            "-projectPath '${this.settings.unityProjectPathAbsolute}'",
