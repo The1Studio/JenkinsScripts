@@ -66,7 +66,7 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
             }
 
             // Archive and export ipa
-            this.ws.sh "xcodebuild -quiet -scheme Unity-iPhone -configuration Release -sdk iphoneos -workspace Unity-iPhone.xcworkspace archive -archivePath ${this.settings.buildName}.xcarchive"
+            this.ws.sh "xcodebuild -quiet -scheme Unity-iPhone -configuration Release -sdk iphoneos -workspace Unity-iPhone.xcworkspace archive -archivePath ${this.settings.buildName}.xcarchive ENABLE_BITCODE=NO"
             this.ws.sh "xcodebuild -quiet -exportArchive -archivePath ${this.settings.buildName}.xcarchive -exportOptionsPlist info.plist -exportPath ${this.settings.buildName}.ipa"
 
             // Check if we have ipa
