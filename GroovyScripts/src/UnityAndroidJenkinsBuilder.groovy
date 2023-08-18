@@ -1,11 +1,10 @@
 import settings.UnityAndroidSettings
-import utils.UnityProjectSettings
 
 class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSettings> {
 
-    private long buildSizeApk
-    private long buildSizeAab
-    private long buildSizeSymbol
+    private float buildSizeApk
+    private float buildSizeAab
+    private float buildSizeSymbol
     private String uploadApkUrl
     private String uploadAabUrl
     private String uploadSymbolUrl

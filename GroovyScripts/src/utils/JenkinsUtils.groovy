@@ -23,11 +23,17 @@ class JenkinsUtils {
         }
     }
 
-    long fileSizeInMB(String path) {
+    float fileSizeInMB(String path) {
+        float result;
+
         if (this.ws.isUnix()) {
-            return Long.parseLong(this.ws.sh(returnStdout: true, script: "du -sh -m $path | awk '{print \$1}'").trim() as String)
+            result = Long.parseLong(this.ws.sh(returnStdout: true, script: "du -sh -b $path | awk '{print \$1}'").trim() as String) / (1024.0 * 1024.0)
         }
-        return Long.parseLong(this.ws.powershell(returnStdout: true, script: "@((gci $path -r | measure Length -s).Sum, (Get-Item $path).Length)[(Test-Path $path -Type leaf)]").trim() as String) / (1024 * 1024)
+        else {
+            result = Long.parseLong(this.ws.powershell(returnStdout: true, script: "@((gci $path -r | measure Length -s).Sum, (Get-Item $path).Length)[(Test-Path $path -Type leaf)]").trim() as String) / (1024.0 * 1024.0)
+        }
+
+        return result.round(2)
     }
 
     def runCommand(String script, boolean returnStdout = false, String encoding = 'UTF-8', String label = '', boolean returnStatus = false) {

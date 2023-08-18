@@ -1,14 +1,12 @@
-import settings.UnityAndroidSettings
 import settings.UnityIOSSettings
-import utils.UnityProjectSettings
 
 class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
     protected String uploadIpaUrl
     protected String uploadArchiveUrl
 
-    protected long buildSizeIpa
-    protected long buildSizeArchive
+    protected float buildSizeIpa
+    protected float buildSizeArchive
 
     UnityIOSJenkinsBuilder(Object workflowScript) {
         super(workflowScript)

@@ -8,11 +8,11 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
     private String accessUrl
     private String accessZipUrl
 
-    private long folderSize
-    private long zipSize
-    private long wasmSize
-    private long dataSize
-    private long streamingAssetsSize
+    private float folderSize
+    private float zipSize
+    private float wasmSize
+    private float dataSize
+    private float streamingAssetsSize
 
     UnityWebGLJenkinsBuilder(Object workflowScript) {
         super(workflowScript)
