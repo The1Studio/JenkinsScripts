@@ -96,6 +96,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         this.ws.echo "---- Start cleaning ----"
 
         this.jenkinsUtils.runCommand("git clean -fd")
+        this.jenkinsUtils.runCommand("git add .")
         this.jenkinsUtils.runCommand("git reset --hard")
         this.jenkinsUtils.runCommand("git submodule foreach --recursive git clean -fd")
         this.jenkinsUtils.runCommand("git submodule foreach --recursive git reset --hard")
