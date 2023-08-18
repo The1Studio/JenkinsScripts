@@ -1,4 +1,5 @@
 import settings.UnityAndroidSettings
+import utils.JenkinsUtils
 
 class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSettings> {
 
@@ -155,7 +156,21 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             return
         }
 
-        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built failed!!!"
+        String status
+
+        switch (this.jenkinsUtils.getCurrentBuildResult()) {
+            case JenkinsUtils.BuildResults.SUCCESS:
+                status = "SUCCESS"
+                break
+            case JenkinsUtils.BuildResults.ABORTED:
+                status = "ABORTED"
+                break
+            default:
+                status = "FAILED"
+                break
+        }
+
+        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ - ${status}!!!"
 
         if (this.jenkinsUtils.isCurrentBuildSuccess()) {
             message = """\

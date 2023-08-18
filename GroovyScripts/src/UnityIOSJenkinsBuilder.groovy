@@ -1,4 +1,5 @@
 import settings.UnityIOSSettings
+import utils.JenkinsUtils
 
 class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
@@ -113,7 +114,21 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
             return
         }
 
-        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built failed!!!"
+        String status
+
+        switch (this.jenkinsUtils.getCurrentBuildResult()) {
+            case JenkinsUtils.BuildResults.SUCCESS:
+                status = "SUCCESS"
+                break
+            case JenkinsUtils.BuildResults.ABORTED:
+                status = "ABORTED"
+                break
+            default:
+                status = "FAILED"
+                break
+        }
+
+        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ - ${status}!!!"
 
         if (this.jenkinsUtils.isCurrentBuildSuccess()) {
             message = """
