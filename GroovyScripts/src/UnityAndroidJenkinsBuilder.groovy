@@ -156,25 +156,10 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             return
         }
 
-        String status
-
-        switch (this.jenkinsUtils.getCurrentBuildResult()) {
-            case JenkinsUtils.BuildResults.SUCCESS:
-                status = "SUCCESS"
-                break
-            case JenkinsUtils.BuildResults.ABORTED:
-                status = "ABORTED"
-                break
-            default:
-                status = "FAILED"
-                break
-        }
-
-        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ - ${status}!!!"
+        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ - ${this.jenkinsUtils.getRawCurrentBuildResult()}!!!"
 
         if (this.jenkinsUtils.isCurrentBuildSuccess()) {
-            message = """\
-                __version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built successfully !!!__
+            message += """
                 ${this.settings.platform} (${this.settings.jobName}) Build
                 Apk: ${this.uploadApkUrl} - ${this.buildSizeApk}MB
                 ${this.settings.isBuildAppBundle ? "Aab: ${this.uploadAabUrl} - ${this.buildSizeAab}MB" : "App bundle build is disabled"}

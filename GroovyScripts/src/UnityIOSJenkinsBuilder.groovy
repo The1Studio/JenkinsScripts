@@ -114,25 +114,10 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
             return
         }
 
-        String status
-
-        switch (this.jenkinsUtils.getCurrentBuildResult()) {
-            case JenkinsUtils.BuildResults.SUCCESS:
-                status = "SUCCESS"
-                break
-            case JenkinsUtils.BuildResults.ABORTED:
-                status = "ABORTED"
-                break
-            default:
-                status = "FAILED"
-                break
-        }
-
-        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ - ${status}!!!"
+        String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ - ${this.jenkinsUtils.getRawCurrentBuildResult()}!!!"
 
         if (this.jenkinsUtils.isCurrentBuildSuccess()) {
-            message = """
-                __version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ was built successfully !!!__
+            message += """
                 ${this.settings.platform} (${this.settings.jobName}) Build 
                 IPA: ${this.uploadIpaUrl} - ${this.buildSizeIpa} MB
                 XCArchive: ${this.uploadArchiveUrl} - ${this.buildSizeArchive} MB

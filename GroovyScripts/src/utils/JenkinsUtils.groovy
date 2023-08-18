@@ -59,6 +59,10 @@ class JenkinsUtils {
         }
     }
 
+    String getRawCurrentBuildResult() {
+        return this.ws.currentBuild.currentResult.toString()
+    }
+
     BuildResults getCurrentBuildResult() {
         try {
             switch (this.ws.currentBuild.currentResult.toString()) {
