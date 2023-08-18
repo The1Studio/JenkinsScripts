@@ -101,11 +101,11 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
             this.jenkinsUtils.uploadToS3('', uploadUrl)
             this.folderSize = this.jenkinsUtils.fileSizeInMB('.')
 
-            if (this.ws.fileExists("Build/${this.settings.buildName}.data")) {
+            if (this.ws.fileExists("Build/${this.settings.buildName}.data.unityweb")) {
                 this.dataSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.data.unityweb")
             }
 
-            if (this.ws.fileExists("Build/${this.settings.buildName}.wasm")) {
+            if (this.ws.fileExists("Build/${this.settings.buildName}.wasm.unityweb")) {
                 this.wasmSize = this.jenkinsUtils.fileSizeInMB("Build/${this.settings.buildName}.wasm.unityweb")
             }
 
