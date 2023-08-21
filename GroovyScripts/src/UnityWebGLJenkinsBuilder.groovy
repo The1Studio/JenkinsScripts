@@ -48,6 +48,16 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
         if (this.settings.isUploadToFacebook) {
             this.settings.isUploadToFacebook = this.settings.facebookAppId != null && !this.settings.facebookAppId.isBlank() && this.settings.facebookAppSecret != null && !this.settings.facebookAppSecret.isBlank()
         }
+
+        if (this.settings.isUploadToFacebook) {
+            if (this.settings.facebookAppId.isBlank()) {
+                this.ws.error("Missing Param: PARAM_FACEBOOK_APP_ID")
+            }
+
+            if (this.settings.facebookAppSecret.isBlank()) {
+                this.ws.error("Missing Param: PARAM_FACEBOOK_APP_SECRET")
+            }
+        }
     }
 
     @Override

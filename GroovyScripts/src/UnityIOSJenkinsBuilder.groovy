@@ -30,6 +30,10 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
         this.settings.platform = 'ios'
         this.settings.signingTeamId = env.PARAM_SIGNING_TEAM_ID
+
+        if (this.settings.signingTeamId.isBlank()) {
+            this.ws.error("Missing Param: PARAM_SIGNING_TEAM_ID")
+        }
     }
 
     @Override

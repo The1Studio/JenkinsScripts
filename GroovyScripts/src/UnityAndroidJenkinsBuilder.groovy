@@ -39,6 +39,24 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         this.settings.keystoreAliasName = this.env.PARAM_KEYSTORE_ALIAS_NAME
         this.settings.keystoreAliasPass = this.env.PARAM_KEYSTORE_ALIAS_PASSWORD
         this.settings.isBuildAppBundle = this.env.PARAM_SHOULD_BUILD_APP_BUNDLE == 'true'
+
+        if (this.settings.isBuildAppBundle) {
+            if (this.settings.keystoreName.isBlank()) {
+                this.ws.error('Missing param: PARAM_KEYSTORE_NAME')
+            }
+
+            if (this.settings.keystorePass.isBlank()) {
+                this.ws.error('Missing param: PARAM_KEYSTORE_PASSWORD')
+            }
+
+            if (this.settings.keystoreAliasName.isBlank()) {
+                this.ws.error('Missing param: PARAM_KEYSTORE_ALIAS_NAME')
+            }
+
+            if (this.settings.keystoreAliasPass.isBlank()) {
+                this.ws.error('Missing param: PARAM_KEYSTORE_ALIAS_PASSWORD')
+            }
+        }
     }
 
     @Override
