@@ -65,6 +65,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         this.settings.uploadDomain = this.env.PARAM_BUILD_DOWNLOAD_URL
         this.settings.discordWebhookUrl = this.env.PARAM_DISCORD_WEBHOOK_URL
         this.settings.rootPathAbsolute = workingDir
+        this.settings.unityEditorName = this.env.PARAM_UNITY_TOOL_NAME
         this.settings.unityProjectPathAbsolute = this.jenkinsUtils.combinePath(workingDir, "Unity${env.PARAM_BUILD_FILE_NAME}")
         this.settings.unityBinaryPathAbsolute = this.ws.tool(name: env.PARAM_UNITY_TOOL_NAME)
         this.settings.isBuildDevelopment = this.env.PARAM_SHOULD_BUILD_DEVELOPMENT == 'true'

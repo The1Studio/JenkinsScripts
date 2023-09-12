@@ -184,6 +184,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 ${this.settings.isBuildAppBundle ? "Symbol: ${this.uploadSymbolUrl} - ${this.buildSizeSymbol}MB" : "App bundle build is disabled"}
                 -----------------------------------------------------------
                 Define Symbols: \n```\n${this.getDefineSymbols().join('\n')}\n```
+                Unity editor: ${this.settings.unityEditorName}
             """.stripMargin()
         }
 

@@ -18,6 +18,7 @@ class UnitySettings {
     public String discordWebhookUrl
 
     public String rootPathAbsolute
+    public String unityEditorName
     public String unityProjectPathAbsolute
     public String unityBinaryPathAbsolute
 
