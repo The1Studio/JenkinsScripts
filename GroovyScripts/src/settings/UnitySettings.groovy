@@ -25,4 +25,6 @@ class UnitySettings {
     public Boolean isBuildDevelopment
     public Boolean isOptimizeBuildSize
     public Boolean isNotifyToChatChannel
+
+    public String discordThumbnailPath = 'https://drive.google.com/file/d/1XXHklQ5cC6lP8TfUDsmiPa6dfLuvdoSs/view?usp=sharing'
 }

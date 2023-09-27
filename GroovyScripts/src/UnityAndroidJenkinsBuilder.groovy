@@ -194,7 +194,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 link: this.ws.env.BUILD_URL,
                 result: this.ws.currentBuild.currentResult,
                 showChangeset: true,
-                thumbnail: 'https://user-images.githubusercontent.com/9598614/205434501-dc9d4c7a-caad-48de-8ec2-ca586f320f87.png',
+                thumbnail: this.settings.discordThumbnailPath,
                 title: "${this.settings.jobName} - ${this.settings.buildNumber}",
                 webhookURL: this.settings.discordWebhookUrl)
     }
