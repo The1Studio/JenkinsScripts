@@ -26,5 +26,5 @@ class UnitySettings {
     public Boolean isOptimizeBuildSize
     public Boolean isNotifyToChatChannel
 
-    public String discordThumbnailPath = 'https://drive.google.com/file/d/1XXHklQ5cC6lP8TfUDsmiPa6dfLuvdoSs/view?usp=sharing'
+    public String discordThumbnailPath = 'https://github.com/The1Studio/JenkinsScripts/assets/9598614/30a75c65-816b-4b4a-9744-9cdb150fdf20'
 }
