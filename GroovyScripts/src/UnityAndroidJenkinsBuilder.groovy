@@ -69,7 +69,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         // Run Unity build
         this.ws.dir(this.settings.unityBinaryPathAbsolute) {
             String buildCommand = [this.ws.isUnix() ? "./Unity" : ".\\Unity.exe",
-                                   " -batchmode -quit -executeMethod Build.BuildFromCommandLine",
+                                   " -batchmode -quit -executeMethod The1StudioBuild.BuildFromCommandLine",
                                    "-buildTarget Android",
                                    "-platforms ${this.settings.platform}",
                                    "-scriptingBackend ${this.settings.scriptingBackend}",
