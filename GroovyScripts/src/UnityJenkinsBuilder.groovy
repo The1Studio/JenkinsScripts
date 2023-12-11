@@ -226,7 +226,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     }
 
     String getBuildNumber() {
-        var result = this.env.BUILD_NUMBER
+        def result = this.env.BUILD_NUMBER
 
         var  tokens = (this.env.GIT_BRANCH as String).split("release-")
 
