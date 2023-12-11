@@ -228,11 +228,10 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     String getBuildNumber() {
         var result = this.env.BUILD_NUMBER
 
-        var branchTokens = (this.env.GIT_BRANCH as String).split("/")
-        var releaseIndex = branchTokens.findIndexOf { (it == "release") }
+        var  tokens = (this.env.GIT_BRANCH as String).split("release-")
 
-        if (releaseIndex >= 0 && releaseIndex + 1 >= branchTokens.size()) {
-            return branchTokens[releaseIndex + 1]
+        if (tokens.size() == 2) {
+            return tokens[1]
         }
 
         return result
