@@ -48,6 +48,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
     void importBuildSettings() throws Exception {
         this.ws.echo "Importing build settings..."
+        this.ws.echo "Selected branch: ${this.env.GIT_BRANCH}"
 
         String workingDir = this.ws.pwd()
 
@@ -226,13 +227,12 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     }
 
     String getBuildNumber() {
-        def result = this.env.BUILD_NUMBER
         def tokens = (this.env.GIT_BRANCH as String).split("release-")
 
         if (tokens.size() == 2) {
             return tokens[1]
         }
 
-        return result
+        return this.env.BUILD_NUMBER
     }
 }
