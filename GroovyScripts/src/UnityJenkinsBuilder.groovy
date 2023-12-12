@@ -56,8 +56,8 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
         this.settings.jobName = this.env.JOB_NAME
         this.settings.buildName = this.env.PARAM_BUILD_FILE_NAME
-        this.settings.buildNumber = this.getBuildNumber()
-        this.settings.buildVersion = this.env.PARAM_BUILD_VERSION
+        this.settings.buildNumber = this.env.BUILD_NUMBER
+        this.settings.buildVersion = this.getBuildVersion()
         this.settings.scriptingBackend = this.env.PARAM_UNITY_SCRIPTING_BACKEND
         this.settings.unityScriptingDefineSymbols = this.env.PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS
         this.settings.unityIdEmail = this.ws.credentials('jenkins-id-for-unity-email')
@@ -226,13 +226,13 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         this.ws.writeFile file: filePath, text: projectSettings.exportFileContent()
     }
 
-    String getBuildNumber() {
+    String getBuildVersion() {
         def tokens = (this.env.GIT_BRANCH as String).split("release-")
 
         if (tokens.size() == 2) {
             return tokens[1]
         }
 
-        return this.env.BUILD_NUMBER
+        return this.env.PARAM_BUILD_VERSION
     }
 }
