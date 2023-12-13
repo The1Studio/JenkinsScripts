@@ -137,6 +137,8 @@ class UnityWebGLJenkinsBuilder extends UnityJenkinsBuilder<UnityWebGLSettings> {
                 this.zipSize = this.jenkinsUtils.fileSizeInMB(zipFile)
             }
         }
+
+        this.uploadBuildReport()
     }
 
     @Override

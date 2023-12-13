@@ -166,6 +166,8 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 this.ws.echo "Symbol build url: ${this.uploadSymbolUrl} - ${this.buildSizeSymbol}MB"
             }
         }
+
+        this.uploadBuildReport()
     }
 
     @Override

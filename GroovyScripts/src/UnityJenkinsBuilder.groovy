@@ -143,6 +143,8 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
             this.ws.echo "Pushing new jenkins submodule..."
             this.ws.error("Check out JenkinsScripts to ${revision} successfully! Please merge branch 'checkout-new-jenkins-submodule' into this branch then build again!")
         }
+
+        this.cleanBuildReport()
     }
 
     void cleanOnError() throws Exception {
@@ -234,5 +236,44 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         }
 
         return this.env.PARAM_BUILD_VERSION
+    }
+
+    String getBuildReportDirectory() {
+        return "Unity${this.settings.buildName}/UnityBuildReports"
+    }
+
+    void uploadBuildReport() {
+        try {
+            def buildReportsDir = getBuildReportDirectory()
+            def buildReportsZip = "${buildReportsDir}.zip"
+
+            if (this.ws.fileExists(buildReportsDir)) {
+                this.ws.zip(
+                        archive: true,
+                        defaultExcludes: false,
+                        dir: buildReportsDir,
+                        exclude: '',
+                        glob: '',
+                        overwrite: true,
+                        zipFile: buildReportsZip
+                )
+            }
+        } catch (exception) {
+            this.ws.echo exception.toString()
+        }
+    }
+
+    void cleanBuildReport() {
+        try {
+            def buildReportsDir = getBuildReportDirectory()
+
+            if (this.ws.fileExists(buildReportsDir)) {
+                this.ws.dir(buildReportsDir) {
+                    this.ws.deleteDir()
+                }
+            }
+        } catch (exception) {
+            this.ws.echo exception.toString()
+        }
     }
 }

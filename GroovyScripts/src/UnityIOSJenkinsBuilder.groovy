@@ -110,6 +110,8 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
             this.ws.echo "Archive build url: ${this.uploadArchiveUrl}"
             this.ws.echo "IPA build url: ${this.uploadIpaUrl}"
         }
+
+        this.uploadBuildReport()
     }
 
     @Override
