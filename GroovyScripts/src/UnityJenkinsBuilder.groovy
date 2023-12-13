@@ -238,13 +238,10 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         return this.env.PARAM_BUILD_VERSION
     }
 
-    String getBuildReportDirectory() {
-        return "Unity${this.settings.buildName}/UnityBuildReports"
-    }
 
     void uploadBuildReport() {
         try {
-            def buildReportsDir = getBuildReportDirectory()
+            def buildReportsDir = "UnityBuildReports"
             def buildReportsZip = "${buildReportsDir}.zip"
 
             if (this.ws.fileExists(buildReportsDir)) {
@@ -265,7 +262,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
     void cleanBuildReport() {
         try {
-            def buildReportsDir = getBuildReportDirectory()
+            def buildReportsDir = "UnityBuildReports"
 
             if (this.ws.fileExists(buildReportsDir)) {
                 this.ws.dir(buildReportsDir) {
