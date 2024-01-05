@@ -27,7 +27,7 @@ class JenkinsUtils {
         float result;
 
         if (this.ws.isUnix()) {
-            result = Long.parseLong(this.ws.sh(returnStdout: true, script: "du -sh -b $path | awk '{print \$1}'").trim() as String) / (1024.0 * 1024.0)
+            result = Long.parseLong(this.ws.sh(returnStdout: true, script: "du -shk $path | awk '{print \$1}'").trim() as String) / (1024.0)
         }
         else {
             result = Long.parseLong(this.ws.powershell(returnStdout: true, script: "@((gci $path -r | measure Length -s).Sum, (Get-Item $path).Length)[(Test-Path $path -Type leaf)]").trim() as String) / (1024.0 * 1024.0)
