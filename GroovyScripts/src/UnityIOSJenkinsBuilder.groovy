@@ -16,7 +16,7 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
     @Override
     void setupParameters(List params) throws Exception {
         params.addAll([
-                this.ws.string(name: 'PARAM_SIGNING_TEAM_ID', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["ios"]["signing-key-id"], description: 'Signing Team ID'),
+                this.ws.string(name: 'PARAM_SIGNING_TEAM_ID', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["ios"]["signing-key-id"], description: 'Signing Team ID\n-TheOne: 786EB2FXYT\n-Commando: G4GS5MQRN7'),
         ])
 
         super.setupParameters(params)
