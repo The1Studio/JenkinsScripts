@@ -64,14 +64,18 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
         }
 
         this.ws.dir(this.getBuildPathRelative { '' }) {
+            var podInstallLogPath = '../../../Logs/Pod-Install-Client.ios.log'
+            var archiveLogPath = '../../../Logs/Archive-Client.ios.log'
+            var exportLogPath = '../../../Logs/Export-Client.ios.log'
+
             // If we have Podfile, and we don't have xcworkspace, we need to run pod install
             if (this.ws.fileExists('Podfile') && !this.ws.fileExists('Unity-iPhone.xcworkspace')) {
-                this.ws.sh 'pod install --silent --allow-root'
+                this.ws.sh "pod install --silent --allow-root > $podInstallLogPath 2>&1"
             }
 
             // Archive and export ipa
-            this.ws.sh "xcodebuild -quiet -scheme Unity-iPhone -configuration Release -sdk iphoneos -workspace Unity-iPhone.xcworkspace archive -archivePath ${this.settings.buildName}.xcarchive ENABLE_BITCODE=NO"
-            this.ws.sh "xcodebuild -quiet -exportArchive -archivePath ${this.settings.buildName}.xcarchive -exportOptionsPlist info.plist -exportPath ${this.settings.buildName}.ipa"
+            this.ws.sh "xcodebuild -quiet -scheme Unity-iPhone -configuration Release -sdk iphoneos -workspace Unity-iPhone.xcworkspace archive -archivePath ${this.settings.buildName}.xcarchive ENABLE_BITCODE=NO > $archiveLogPath 2>&1"
+            this.ws.sh "xcodebuild -quiet -exportArchive -archivePath ${this.settings.buildName}.xcarchive -exportOptionsPlist info.plist -exportPath ${this.settings.buildName}.ipa > $exportLogPath 2>&1"
 
             // Check if we have ipa
             if (!this.ws.fileExists("${this.settings.buildName}.ipa")) {
