@@ -229,10 +229,10 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     }
 
     String getBuildVersion() {
-        def tokens = (this.env.GIT_BRANCH as String).split("release-")
+        def matcher = (~/release(-[\w\W]+)?-((\d+.?)+)/).matcher(this.env.GIT_BRANCH as String);
 
-        if (tokens.size() == 2) {
-            return tokens[1]
+        if (matcher.matches()) {
+            return matcher.group(2)
         }
 
         return this.env.PARAM_BUILD_VERSION
