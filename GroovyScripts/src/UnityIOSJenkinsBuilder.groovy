@@ -64,9 +64,9 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
         }
 
         this.ws.dir(this.getBuildPathRelative { '' }) {
-            var podInstallLogPath = '../../../Logs/Pod-Install-Client.ios.log'
-            var archiveLogPath = '../../../Logs/Archive-Client.ios.log'
-            var exportLogPath = '../../../Logs/Export-Client.ios.log'
+            def podInstallLogPath = '../../../Logs/Pod-Install-Client.ios.log'
+            def archiveLogPath = '../../../Logs/Archive-Client.ios.log'
+            def exportLogPath = '../../../Logs/Export-Client.ios.log'
 
             // If we have Podfile, and we don't have xcworkspace, we need to run pod install
             if (this.ws.fileExists('Podfile') && !this.ws.fileExists('Unity-iPhone.xcworkspace')) {
