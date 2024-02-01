@@ -106,7 +106,7 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
             this.uploadArchiveUrl = "${this.settings.uploadDomain}/$uploadUrl/${archiveZipFile}"
 
             this.ws.dir("${buildName}.ipa") {
-                String ipaFile = this.ws.findFiles excludes: '', glob: '*.ipa'
+                String ipaFile = this.ws.findFiles(excludes: '', glob: '*.ipa').getName()
 
                 this.buildSizeIpa = this.jenkinsUtils.fileSizeInMB(ipaFile)
                 this.ws.echo "IPA build size: ${this.buildSizeIpa} MB"
@@ -147,7 +147,24 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
                 ${this.settings.platform} (${this.settings.jobName}) Build 
                 IPA: ${this.uploadIpaUrl} - ${this.buildSizeIpa} MB
                 XCArchive: ${this.uploadArchiveUrl} - ${this.buildSizeArchive} MB
+                -----------------------------------------------------------
+                Define Symbols: \\n```\\n${this.getDefineSymbols().join('\\n')}\\n```
+                Unity editor: ${this.settings.unityEditorName}
             """.stripMargin()
+
+            this.ws.discordSend(
+                    description: message,
+                    enableArtifactsList: true,
+                    footer: "------TheOneStudio-------",
+                    link: this.ws.env.BUILD_URL,
+                    result: this.ws.currentBuild.currentResult,
+                    showChangeset: true,
+                    thumbnail: this.settings.discordThumbnailPath,
+                    title: "${this.settings.jobName} - ${this.settings.buildNumber}",
+                    webhookURL: this.settings.discordWebhookUrl,
+                    "image": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=itms-services%3A%2F%2F%3Faction%3Ddownload-manifest%26url%3D${this.uploadPlistUrl}"
+            )
+            return;
         }
 
         this.ws.discordSend(
@@ -160,7 +177,6 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
                 thumbnail: this.settings.discordThumbnailPath,
                 title: "${this.settings.jobName} - ${this.settings.buildNumber}",
                 webhookURL: this.settings.discordWebhookUrl,
-                "image": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=itms-services%3A%2F%2F%3Faction%3Ddownload-manifest%26url%3D${this.uploadPlistUrl}"
         )
     }
 
