@@ -1,8 +1,10 @@
 import settings.UnityIOSSettings
 import utils.JenkinsUtils
+import utils.ManifestPlistBuilder
 
 class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
+    protected String uploadPlistUrl
     protected String uploadIpaUrl
     protected String uploadArchiveUrl
 
@@ -91,25 +93,39 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
 
         this.ws.dir(this.getBuildPathRelative { '' }) {
             String archiveDirectory = "${buildName}.xcarchive"
-            String ipaDirectory = "${buildName}.ipa"
-
             String archiveZipFile = "${buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.xcarchive.zip"
-            String ipaZipFile = "${buildName}-${this.settings.buildVersion}-${this.settings.buildNumber}.ipa.zip"
 
             this.ws.sh "zip -6 -q -r '${archiveZipFile}' '${archiveDirectory}'"
-            this.ws.sh "zip -6 -q -r '${ipaZipFile}' '${ipaDirectory}'"
 
             this.buildSizeArchive = this.jenkinsUtils.fileSizeInMB(archiveZipFile)
-            this.buildSizeIpa = this.jenkinsUtils.fileSizeInMB(ipaZipFile)
 
             this.ws.echo "Archive build size: ${this.buildSizeArchive} MB"
-            this.ws.echo "IPA build size: ${this.buildSizeIpa} MB"
 
             this.jenkinsUtils.uploadToS3(archiveZipFile, "$uploadUrl/${archiveZipFile}")
-            this.jenkinsUtils.uploadToS3(ipaZipFile, "$uploadUrl/${ipaZipFile}")
 
             this.uploadArchiveUrl = "${this.settings.uploadDomain}/$uploadUrl/${archiveZipFile}"
-            this.uploadIpaUrl = "${this.settings.uploadDomain}/$uploadUrl/${ipaZipFile}"
+
+            this.ws.dir("${buildName}.ipa") {
+                String ipaFile = this.ws.findFiles excludes: '', glob: '*.ipa'
+
+                this.buildSizeIpa = this.jenkinsUtils.fileSizeInMB(ipaFile)
+                this.ws.echo "IPA build size: ${this.buildSizeIpa} MB"
+
+                this.jenkinsUtils.uploadToS3(ipaFile, "$uploadUrl/${ipaFile}")
+                this.uploadIpaUrl = "${this.settings.uploadDomain}/$uploadUrl/${ipaFile}"
+
+                String manifest = new ManifestPlistBuilder()
+                        .setTitle(buildName)
+                        .setIPA(this.uploadIpaUrl)
+                        .setBundleId("com.car.climb.draw.bridge")
+                        .setVersion(this.settings.buildVersion)
+                        .build()
+
+                this.ws.writeFile encoding: 'utf-8', file: 'manifest.plist', text: manifest
+                this.jenkinsUtils.uploadToS3('manifest.plist', "$uploadUrl/manifest.plist")
+
+                this.uploadPlistUrl = "${this.settings.uploadDomain}/$uploadUrl/manifest.plist"
+            }
 
             this.ws.echo "Archive build url: ${this.uploadArchiveUrl}"
             this.ws.echo "IPA build url: ${this.uploadIpaUrl}"
@@ -134,7 +150,8 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
             """.stripMargin()
         }
 
-        this.ws.discordSend(description: message,
+        this.ws.discordSend(
+                description: message,
                 enableArtifactsList: true,
                 footer: "------TheOneStudio-------",
                 link: this.ws.env.BUILD_URL,
@@ -142,7 +159,9 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
                 showChangeset: true,
                 thumbnail: this.settings.discordThumbnailPath,
                 title: "${this.settings.jobName} - ${this.settings.buildNumber}",
-                webhookURL: this.settings.discordWebhookUrl)
+                webhookURL: this.settings.discordWebhookUrl,
+                "image": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=itms-services%3A%2F%2F%3Faction%3Ddownload-manifest%26url%3D${this.uploadPlistUrl}"
+        )
     }
 
     @Override
