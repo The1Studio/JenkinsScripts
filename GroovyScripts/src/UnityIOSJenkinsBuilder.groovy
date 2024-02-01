@@ -1,3 +1,4 @@
+import com.android.io.FileWrapper
 import settings.UnityIOSSettings
 import utils.JenkinsUtils
 import utils.ManifestPlistBuilder
@@ -106,7 +107,7 @@ class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
             this.uploadArchiveUrl = "${this.settings.uploadDomain}/$uploadUrl/${archiveZipFile}"
 
             this.ws.dir("${buildName}.ipa") {
-                String ipaFile = this.ws.findFiles(excludes: '', glob: '*.ipa').getName()
+                String ipaFile = this.ws.findFiles(excludes: '', glob: '*.ipa')[0].name
 
                 this.buildSizeIpa = this.jenkinsUtils.fileSizeInMB(ipaFile)
                 this.ws.echo "IPA build size: ${this.buildSizeIpa} MB"
