@@ -1,6 +1,4 @@
-import com.android.io.FileWrapper
 import settings.UnityIOSSettings
-import utils.JenkinsUtils
 import utils.ManifestPlistBuilder
 
 class UnityIOSJenkinsBuilder extends UnityJenkinsBuilder<UnityIOSSettings> {
