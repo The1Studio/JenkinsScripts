@@ -1,6 +1,6 @@
-def call(def ws) {
+def call(Map params) {
     pipeline {
-        def jenkinsBuilder = new UnityIOSJenkinsBuilder(ws)
+        def jenkinsBuilder = new UnityIOSJenkinsBuilder(params.ws)
 
         agent { label "macos" }
 

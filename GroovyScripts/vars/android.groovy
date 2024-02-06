@@ -1,6 +1,6 @@
-def call(def ws) {
+def call(Map params) {
     pipeline {
-        def jenkinsBuilder = new UnityAndroidJenkinsBuilder(ws)
+        def jenkinsBuilder = new UnityAndroidJenkinsBuilder(params.ws)
 
         agent any
 
