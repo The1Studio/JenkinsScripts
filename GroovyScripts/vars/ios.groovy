@@ -1,5 +1,5 @@
-def call() {
-    def jenkinsBuilder = new UnityIOSJenkinsBuilder(this)
+def call(def ws) {
+    def jenkinsBuilder = new UnityIOSJenkinsBuilder(ws)
 
     pipeline {
         agent { label "macos" }

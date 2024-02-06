@@ -1,5 +1,5 @@
-def call() {
-    def jenkinsBuilder = new UnityWebGLJenkinsBuilder(this)
+def call(def ws) {
+    def jenkinsBuilder = new UnityWebGLJenkinsBuilder(ws)
 
     pipeline {
         agent any
