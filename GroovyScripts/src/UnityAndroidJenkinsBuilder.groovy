@@ -22,6 +22,8 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 this.ws.string(name: 'PARAM_KEYSTORE_ALIAS_NAME', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["keystore-alias-name"], description: 'Keystore alias name'),
                 this.ws.password(name: 'PARAM_KEYSTORE_ALIAS_PASSWORD', description: 'Keystore alias password'),
                 this.ws.booleanParam(name: 'PARAM_SHOULD_BUILD_APP_BUNDLE', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["should-build-app-bundle"], description: 'Should build app bundle'),
+                this.ws.string(name: 'PARAM_BUNDLE_TOOL_SOURCE', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["bundle-tool-source"], description: 'This can be relative path or http url'),
+                this.ws.booleanParam(name: 'PARAM_UPDATE_BUNDLE_TOOL', defaultValue: false, description: 'Trigger update bundle tool'),
         ])
 
         super.setupParameters(params)
@@ -39,6 +41,8 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         this.settings.keystoreAliasName = this.env.PARAM_KEYSTORE_ALIAS_NAME
         this.settings.keystoreAliasPass = this.env.PARAM_KEYSTORE_ALIAS_PASSWORD
         this.settings.isBuildAppBundle = this.env.PARAM_SHOULD_BUILD_APP_BUNDLE == 'true'
+        this.settings.bundleToolSource = this.env.PARAM_BUNDLE_TOOL_SOURCE ?: this.jenkinsUtils.defaultValues["build-settings"]["android"]["bundle-tool-fallback"]
+        this.settings.isUpdateBundleTool = this.env.PARAM_UPDATE_BUNDLE_TOOL ?: false
 
         if (this.settings.isBuildAppBundle) {
             if (this.settings.keystoreName.isBlank()) {
@@ -57,6 +61,8 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 this.ws.error('Missing param: PARAM_KEYSTORE_ALIAS_PASSWORD')
             }
         }
+
+        this.ensureBundleTool()
     }
 
     @Override
@@ -205,7 +211,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         this.ws.dir(this.getBuildPathRelative { '' }) {
             String apksFile = aabFile.replace(".aab", ".apks")
             String keystorePath = this.jenkinsUtils.combinePath(this.settings.unityProjectPathAbsolute, this.settings.keystoreName)
-            String bundleToolPath = this.jenkinsUtils.combinePath(this.settings.rootPathAbsolute, "JenkinsScripts", "bundletool-all.jar")
+            String bundleToolPath = this.jenkinsUtils.combinePath(this.settings.rootPathAbsolute, "bundletool-all.jar")
 
             this.jenkinsUtils.runCommand([
                     "java -jar \"$bundleToolPath\" build-apks",
@@ -221,6 +227,32 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             // uncompress apks
             this.ws.unzip zipFile: apksFile, dir: "."
             this.ws.fileOperations([this.ws.fileRenameOperation(destination: apkFile, source: "universal.apk")])
+        }
+    }
+
+    void ensureBundleTool() {
+        this.ws.dir(this.settings.rootPathAbsolute) {
+            def source = this.settings.bundleToolSource.trim()
+            def isRemoteSource = source.startsWith("http:") || source.startsWith("https:")
+            def updateBundleTool = this.settings.isUpdateBundleTool || !this.ws.fileExist("bundletool-all.jar")
+
+            // update bundle tool condition
+            if (!updateBundleTool) return
+
+            // if file exists so bundle source is local path
+            if (!isRemoteSource && this.ws.fileExist(this.settings.bundleToolSource)) return
+
+            this.ws.fileOperations([
+                    this.ws.fileDownloadOperation(
+                            password: '',
+                            proxyHost: '',
+                            proxyPort: '',
+                            targetFileName: '',
+                            targetLocation: 'bundletool-all.jar',
+                            url: this.settings.bundleToolSource,
+                            userName: ''
+                    )
+            ])
         }
     }
 }

@@ -21,7 +21,6 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
     void setupParameters(List params) throws Exception {
         def listParams = [
-                this.ws.string(name: 'PARAM_CHECKOUT_JENKINS_REVISION', defaultValue: '', description: 'Checkout to jenkins revision or branch, if empty will do nothing'),
                 this.ws.booleanParam(name: 'PARAM_SHOULD_RESET_JENKINS_PARAMS', defaultValue: false, description: 'Should reset jenkins params'),
                 this.ws.string(name: 'PARAM_BUILD_FILE_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-file-name'], description: 'Build file name, this must be the unity project folder name (without prefix "Unity")'),
                 this.ws.string(name: 'PARAM_BUILD_VERSION', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-version'], description: 'Build version. Ex: 1.0.0'),
@@ -124,25 +123,6 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         }
 
         this.ws.echo "---- End cleaning ----"
-
-        String revision = this.env.PARAM_CHECKOUT_JENKINS_REVISION
-        if (revision && !revision.isEmpty()) {
-            String jenkinsPath = 'JenkinsScripts'
-
-            this.ws.echo "Checking out jenkins to ${revision}..."
-
-            this.ws.dir(jenkinsPath) {
-                this.jenkinsUtils.runCommand("git fetch")
-                this.jenkinsUtils.runCommand("git reset --hard ${revision}")
-            }
-
-            this.jenkinsUtils.runCommand("git add ${jenkinsPath}")
-            this.jenkinsUtils.runCommand("git commit -m \"Checkout JenkinsScripts to ${revision}\"")
-            this.jenkinsUtils.runCommand("git push -f origin HEAD:checkout-new-jenkins-submodule")
-
-            this.ws.echo "Pushing new jenkins submodule..."
-            this.ws.error("Check out JenkinsScripts to ${revision} successfully! Please merge branch 'checkout-new-jenkins-submodule' into this branch then build again!")
-        }
 
         this.cleanBuildReport()
     }

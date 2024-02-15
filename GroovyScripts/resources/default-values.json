@@ -19,7 +19,9 @@
         "android": {
             "should-build-app-bundle": false,
             "keystore-name": "the1_googleplay.keystore",
-            "keystore-alias-name": "theonestudio"
+            "keystore-alias-name": "theonestudio",
+            "bundle-tool-source": "bundletool-all.jar",
+            "bundle-tool-fallback": "https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar"
         },
         "webgl": {
             "orientation": ["PORTRAIT", "LANDSCAPE"],

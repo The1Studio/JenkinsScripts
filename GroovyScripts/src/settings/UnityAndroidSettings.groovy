@@ -7,5 +7,8 @@ class UnityAndroidSettings extends UnitySettings {
     public String keystoreAliasPass
 
     public Boolean isBuildAppBundle
+
+    public String bundleToolSource
+    public Boolean isUpdateBundleTool
 }
 
