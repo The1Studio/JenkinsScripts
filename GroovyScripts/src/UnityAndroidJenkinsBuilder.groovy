@@ -234,13 +234,13 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         this.ws.dir(this.settings.rootPathAbsolute) {
             def source = this.settings.bundleToolSource.trim()
             def isRemoteSource = source.startsWith("http:") || source.startsWith("https:")
-            def updateBundleTool = this.settings.isUpdateBundleTool || !this.ws.fileExist("bundletool-all.jar")
+            def updateBundleTool = this.settings.isUpdateBundleTool || !this.ws.fileExists("bundletool-all.jar")
 
             // update bundle tool condition
             if (!updateBundleTool) return
 
             // if file exists so bundle source is local path
-            if (!isRemoteSource && this.ws.fileExist(this.settings.bundleToolSource)) return
+            if (!isRemoteSource && this.ws.fileExists(this.settings.bundleToolSource)) return
 
             this.ws.fileOperations([
                     this.ws.fileDownloadOperation(
