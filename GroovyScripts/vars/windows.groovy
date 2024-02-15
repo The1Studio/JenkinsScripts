@@ -1,5 +1,5 @@
 def call(def ws) {
-    def jenkinsBuilder = new UnityAndroidJenkinsBuilder(ws)
+    def jenkinsBuilder = new UnityWindowsJenkinsBuilder(ws)
 
     pipeline {
         agent any
