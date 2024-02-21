@@ -93,7 +93,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
             this.ws.error('Missing param: PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS')
         }
 
-        if (this.env.PARAM_WIPE_OUT_WORKSPACE) {
+        if (this.env.PARAM_WIPE_OUT_WORKSPACE == 'true') {
             this.ws.cleanWs()
             this.ws.error('Wipe out workspace successfully')
         }
