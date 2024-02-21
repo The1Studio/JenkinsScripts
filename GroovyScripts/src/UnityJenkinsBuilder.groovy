@@ -22,6 +22,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     void setupParameters(List params) throws Exception {
         def listParams = [
                 this.ws.booleanParam(name: 'PARAM_SHOULD_RESET_JENKINS_PARAMS', defaultValue: false, description: 'Should reset jenkins params'),
+                this.ws.booleanParam(name: 'PARAM_WIPE_OUT_WORKSPACE', defaultValue: false, description: 'Wipe out workspace'),
                 this.ws.string(name: 'PARAM_BUILD_FILE_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-file-name'], description: 'Build file name, this must be the unity project folder name (without prefix "Unity")'),
                 this.ws.string(name: 'PARAM_BUILD_VERSION', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['build-version'], description: 'Build version. Ex: 1.0.0'),
                 this.ws.string(name: 'PARAM_UNITY_TOOL_NAME', defaultValue: this.jenkinsUtils.defaultValues['build-settings']['unity-tool-name'], description: 'Unity tool name'),
@@ -90,6 +91,11 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
         if (this.settings.unityScriptingDefineSymbols.isBlank()) {
             this.ws.error('Missing param: PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS')
+        }
+
+        if (this.env.PARAM_WIPE_OUT_WORKSPACE) {
+            this.ws.cleanWs()
+            this.ws.error('Wipe out workspace successfully')
         }
     }
 
