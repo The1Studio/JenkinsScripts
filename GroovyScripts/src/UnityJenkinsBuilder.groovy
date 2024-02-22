@@ -95,8 +95,11 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
 
         if (this.env.PARAM_WIPE_OUT_WORKSPACE == 'true') {
             this.ws.cleanWs()
-            this.ws.error('Wipe out workspace successfully')
         }
+    }
+
+    void checkoutScm() {
+        this.ws.checkout this.ws.scm
     }
 
     void clean() throws Exception {

@@ -4,6 +4,10 @@ def call(def ws) {
     pipeline {
         agent any
 
+        options {
+            skipDefaultCheckout()
+        }
+
         stages {
             stage('Create Builder') {
                 steps {
@@ -15,11 +19,12 @@ def call(def ws) {
                 }
             }
 
-            stage("Clean and sync") {
+            stage("Workspace Preparing") {
                 options { timeout(time: 1, unit: 'HOURS') }
 
                 steps {
                     script {
+                        jenkinsBuilder.checkoutScm()
                         jenkinsBuilder.clean()
                     }
                 }
