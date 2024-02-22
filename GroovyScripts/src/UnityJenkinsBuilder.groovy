@@ -92,13 +92,13 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         if (this.settings.unityScriptingDefineSymbols.isBlank()) {
             this.ws.error('Missing param: PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS')
         }
-
-        if (this.env.PARAM_WIPE_OUT_WORKSPACE == 'true') {
-            this.ws.cleanWs()
-        }
     }
 
     void checkoutScm() {
+        if (this.env.PARAM_WIPE_OUT_WORKSPACE == 'true') {
+            this.ws.cleanWs()
+        }
+
         this.ws.checkout this.ws.scm
     }
 

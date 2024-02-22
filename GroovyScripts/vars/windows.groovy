@@ -14,6 +14,9 @@ def call(def ws) {
                     script {
                         jenkinsBuilder.loadResource()
                         jenkinsBuilder.setupParameters([])
+
+                        jenkinsBuilder.checkoutScm()
+
                         jenkinsBuilder.importBuildSettings()
                     }
                 }
@@ -24,7 +27,6 @@ def call(def ws) {
 
                 steps {
                     script {
-                        jenkinsBuilder.checkoutScm()
                         jenkinsBuilder.clean()
                     }
                 }
