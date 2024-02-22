@@ -5,18 +5,25 @@ def jenkinsBuilder = new UnityAndroidJenkinsBuilder(this)
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout()
+    }
+
     stages {
         stage('Create Builder') {
             steps {
                 script {
                     jenkinsBuilder.loadResource()
                     jenkinsBuilder.setupParameters([])
+
+                    jenkinsBuilder.checkoutScm()
+
                     jenkinsBuilder.importBuildSettings()
                 }
             }
         }
 
-        stage("Clean and sync") {
+        stage("Workspace Preparing") {
             options { timeout(time: 1, unit: 'HOURS') }
 
             steps {

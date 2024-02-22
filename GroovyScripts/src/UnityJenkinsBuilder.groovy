@@ -99,6 +99,10 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
             this.ws.cleanWs()
         }
 
+        this.ws.echo this.env.$BRANCH
+        this.ws.echo this.env.$GIT_BRANCH
+        this.ws.echo this.env.$BRANCH_NAME
+
         this.ws.checkout this.ws.scm
     }
 
@@ -218,7 +222,13 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     }
 
     String getBuildVersion() {
-        def matcher = (~/origin\/release(-[\w\W]+)?-((\d+.?)+)/).matcher(this.env.GIT_BRANCH as String);
+        String gitBranch = this.env.GIT_BRANCH ?: ""
+
+        if (gitBranch.isEmpty()){
+            return this.env.PARAM_BUILD_VERSION
+        }
+
+        def matcher = (~/origin\/release(-[\w\W]+)?-((\d+.?)+)/).matcher(gitBranch);
 
         if (matcher.matches()) {
             return matcher.group(2)
