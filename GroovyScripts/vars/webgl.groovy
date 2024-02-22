@@ -4,25 +4,18 @@ def call(def ws) {
     pipeline {
         agent any
 
-        options {
-            skipDefaultCheckout()
-        }
-
         stages {
             stage('Create Builder') {
                 steps {
                     script {
                         jenkinsBuilder.loadResource()
                         jenkinsBuilder.setupParameters([])
-
-                        jenkinsBuilder.checkoutScm()
-
                         jenkinsBuilder.importBuildSettings()
                     }
                 }
             }
 
-            stage("Workspace Preparing") {
+            stage("Clean and sync") {
                 options { timeout(time: 1, unit: 'HOURS') }
 
                 steps {

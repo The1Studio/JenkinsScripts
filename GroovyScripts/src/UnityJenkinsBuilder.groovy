@@ -92,18 +92,11 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
         if (this.settings.unityScriptingDefineSymbols.isBlank()) {
             this.ws.error('Missing param: PARAM_UNITY_SCRIPTING_DEFINE_SYMBOLS')
         }
-    }
 
-    void checkoutScm() {
         if (this.env.PARAM_WIPE_OUT_WORKSPACE == 'true') {
             this.ws.cleanWs()
+            this.ws.error('Wipe out workspace successfully')
         }
-
-        this.ws.echo this.env.$BRANCH
-        this.ws.echo this.env.$GIT_BRANCH
-        this.ws.echo this.env.$BRANCH_NAME
-
-        this.ws.checkout this.ws.scm
     }
 
     void clean() throws Exception {
@@ -222,13 +215,7 @@ abstract class UnityJenkinsBuilder<TBuildSetting extends UnitySettings> {
     }
 
     String getBuildVersion() {
-        String gitBranch = this.env.GIT_BRANCH ?: ""
-
-        if (gitBranch.isEmpty()){
-            return this.env.PARAM_BUILD_VERSION
-        }
-
-        def matcher = (~/origin\/release(-[\w\W]+)?-((\d+.?)+)/).matcher(gitBranch);
+        def matcher = (~/origin\/release(-[\w\W]+)?-((\d+.?)+)/).matcher(this.env.GIT_BRANCH as String);
 
         if (matcher.matches()) {
             return matcher.group(2)
