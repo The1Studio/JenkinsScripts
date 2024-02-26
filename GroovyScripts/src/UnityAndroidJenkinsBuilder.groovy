@@ -182,6 +182,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
             return
         }
 
+        String logPath = this.getLogPath(false) { "Build-Client.${this.settings.platform}.log" }
         String message = "__version: ${this.settings.buildVersion} - number: ${this.settings.buildNumber}__ - ${this.jenkinsUtils.getRawCurrentBuildResult()}!!!"
 
         if (this.jenkinsUtils.isCurrentBuildSuccess()) {
@@ -193,6 +194,17 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 -----------------------------------------------------------
                 Define Symbols: \n```\n${this.getDefineSymbols().join('\n')}\n```
                 Unity editor: ${this.settings.unityEditorName}
+            """.stripMargin()
+        } else if (this.ws.fileExists(logPath)) {
+            String content = this.ws.readFile(logPath)
+            content = content.split("\n")[-20..-1].join('\n')
+
+            message += """
+                -----------------------------------------------------------
+                Last 20 lines of log:
+                ```
+                ${content}
+                ```
             """.stripMargin()
         }
 
