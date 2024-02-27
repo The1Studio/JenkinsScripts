@@ -183,7 +183,9 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                     job: 'JenkinsLab/T1Dashboard-BuildAnalysis',
                     parameters: [
                             this.ws.string(name: 'PARAM_BUILD_URL', value: this.uploadAabUrl),
-                            this.ws.string(name: 'PARAM_DISCORD_WEBHOOK_URL', value: this.settings.discordWebhookUrl)
+                            this.ws.string(name: 'PARAM_DISCORD_WEBHOOK_URL', value: this.settings.discordWebhookUrl),
+                            this.ws.string(name: 'PARAM_BUILD_TITLE', value: "[Analysis]-${this.settings.jobName} - ${this.settings.buildNumber}"),
+                            this.ws.string(name: 'PARAM_BUILD_URL', value: this.ws.env.BUILD_URL)
                     ]
             )
         }
