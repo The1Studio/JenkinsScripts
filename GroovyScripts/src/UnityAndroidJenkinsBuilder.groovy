@@ -24,6 +24,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
                 this.ws.booleanParam(name: 'PARAM_SHOULD_BUILD_APP_BUNDLE', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["should-build-app-bundle"], description: 'Should build app bundle'),
                 this.ws.string(name: 'PARAM_BUNDLE_TOOL_SOURCE', defaultValue: this.jenkinsUtils.defaultValues["build-settings"]["android"]["bundle-tool-source"], description: 'This can be relative path or http url'),
                 this.ws.booleanParam(name: 'PARAM_UPDATE_BUNDLE_TOOL', defaultValue: false, description: 'Trigger update bundle tool'),
+                this.ws.booleanParam(name: 'PARAM_SHOULD_ANALYZE_BUILD', defaultValue: false, description: 'Trigger update bundle tool'),
         ])
 
         super.setupParameters(params)
@@ -43,6 +44,7 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         this.settings.isBuildAppBundle = this.env.PARAM_SHOULD_BUILD_APP_BUNDLE == 'true'
         this.settings.bundleToolSource = this.env.PARAM_BUNDLE_TOOL_SOURCE ?: this.jenkinsUtils.defaultValues["build-settings"]["android"]["bundle-tool-fallback"]
         this.settings.isUpdateBundleTool = this.env.PARAM_UPDATE_BUNDLE_TOOL ?: false
+        this.settings.isAnalyzeBuild = this.env.PARAM_SHOULD_ANALYZE_BUILD ?: false
 
         if (this.settings.isBuildAppBundle) {
             if (this.settings.keystoreName.isBlank()) {
@@ -174,6 +176,17 @@ class UnityAndroidJenkinsBuilder extends UnityJenkinsBuilder<UnityAndroidSetting
         }
 
         this.uploadBuildReport()
+
+        if (this.settings.isAnalyzeBuild && this.settings.isBuildAppBundle && !this.settings.discordWebhookUrl.isEmpty()) {
+            this.ws.build(
+                    wait: false,
+                    job: 'JenkinsLab/T1Dashboard-BuildAnalysis',
+                    parameters: [
+                            this.ws.string(name: 'PARAM_BUILD_URL', value: this.uploadAabUrl),
+                            this.ws.string(name: 'PARAM_DISCORD_WEBHOOK_URL', value: this.settings.discordWebhookUrl)
+                    ]
+            )
+        }
     }
 
     @Override

@@ -27,4 +27,6 @@ class UnitySettings {
     public Boolean isNotifyToChatChannel
 
     public String discordThumbnailPath = 'https://github.com/The1Studio/JenkinsScripts/assets/9598614/30a75c65-816b-4b4a-9744-9cdb150fdf20'
+
+    public Boolean isAnalyzeBuild
 }
